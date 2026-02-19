@@ -1,0 +1,166 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="min-h-screen py-12 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-3xl mx-auto">
+        <!-- 헤더 -->
+        <div class="text-center mb-12">
+            <div class="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-orange-400 to-orange-600 rounded-full mb-6 shadow-lg">
+                <span class="text-3xl">🌟</span>
+            </div>
+            <h2 class="text-4xl font-bold text-gradient mb-2">이루다와 함께 시작하기</h2>
+            <p class="text-xl text-gray-600">자립을 향한 여정의 첫 걸음을 내딛어보세요</p>
+        </div>
+        
+        <!-- 회원가입 폼 -->
+        <div class="card">
+            <form method="POST" class="space-y-8">
+                <!-- 기본 정보 섹션 -->
+                <div>
+                    <h3 class="text-xl font-semibold text-gray-800 mb-6 flex items-center">
+                        <span class="w-8 h-8 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center mr-3">
+                            <span class="text-white text-sm">👤</span>
+                        </span>
+                        기본 정보
+                    </h3>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label for="name" class="block text-sm font-medium text-gray-700 mb-2">이름</label>
+                            <input type="text" 
+                                   id="name"
+                                   name="name" 
+                                   placeholder="이름을 입력하세요" 
+                                   required
+                                   class="w-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all">
+                        </div>
+                        <div>
+                            <label for="email" class="block text-sm font-medium text-gray-700 mb-2">이메일</label>
+                            <input type="email" 
+                                   id="email"
+                                   name="email" 
+                                   placeholder="이메일을 입력하세요" 
+                                   required
+                                   class="w-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all">
+                        </div>
+                    </div>
+                    
+                    <div class="mt-6">
+                        <label for="password" class="block text-sm font-medium text-gray-700 mb-2">비밀번호</label>
+                        <input type="password" 
+                               id="password"
+                               name="password" 
+                               placeholder="비밀번호를 입력하세요" 
+                               required
+                               class="w-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all">
+                    </div>
+                </div>
+                
+                <!-- 프로필 정보 섹션 -->
+                <div>
+                    <h3 class="text-xl font-semibold text-gray-800 mb-6 flex items-center">
+                        <span class="w-8 h-8 bg-gradient-to-br from-green-500 to-green-600 rounded-lg flex items-center justify-center mr-3">
+                            <span class="text-white text-sm">🏠</span>
+                        </span>
+                        프로필 정보
+                    </h3>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label for="housing_status" class="block text-sm font-medium text-gray-700 mb-2">주거 상황</label>
+                            <select id="housing_status" 
+                                    name="housing_status" 
+                                    required
+                                    class="w-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all">
+                                <option value="">주거 상황을 선택하세요</option>
+                                <option value="자립준비청소년">자립준비청소년</option>
+                                <option value="원룸거주">원룸 거주</option>
+                                <option value="쉐어하우스">쉐어하우스</option>
+                                <option value="기타">기타</option>
+                            </select>
+                        </div>
+                        
+                        <div>
+                            <label for="income_level" class="block text-sm font-medium text-gray-700 mb-2">소득 수준</label>
+                            <select id="income_level" 
+                                    name="income_level" 
+                                    required
+                                    class="w-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all">
+                                <option value="">소득 수준을 선택하세요</option>
+                                <option value="50만원 이하">50만원 이하</option>
+                                <option value="50-100만원">50-100만원</option>
+                                <option value="100-150만원">100-150만원</option>
+                                <option value="150만원 이상">150만원 이상</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 지원 영역 섹션 -->
+                <div>
+                    <h3 class="text-xl font-semibold text-gray-800 mb-6 flex items-center">
+                        <span class="w-8 h-8 bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg flex items-center justify-center mr-3">
+                            <span class="text-white text-sm">🎯</span>
+                        </span>
+                        필요한 지원 영역
+                    </h3>
+                    
+                    <p class="text-gray-600 mb-4">복수 선택 가능합니다</p>
+                    
+                    <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+                        <label class="flex items-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors">
+                            <input type="checkbox" name="support_needs" value="주거지원" class="mr-3 w-4 h-4 text-orange-600 border-gray-300 rounded focus:ring-orange-500">
+                            <span class="text-sm font-medium text-gray-700">🏠 주거지원</span>
+                        </label>
+                        <label class="flex items-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors">
+                            <input type="checkbox" name="support_needs" value="경제지원" class="mr-3 w-4 h-4 text-orange-600 border-gray-300 rounded focus:ring-orange-500">
+                            <span class="text-sm font-medium text-gray-700">💰 경제지원</span>
+                        </label>
+                        <label class="flex items-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors">
+                            <input type="checkbox" name="support_needs" value="교육지원" class="mr-3 w-4 h-4 text-orange-600 border-gray-300 rounded focus:ring-orange-500">
+                            <span class="text-sm font-medium text-gray-700">📚 교육지원</span>
+                        </label>
+                        <label class="flex items-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors">
+                            <input type="checkbox" name="support_needs" value="취업지원" class="mr-3 w-4 h-4 text-orange-600 border-gray-300 rounded focus:ring-orange-500">
+                            <span class="text-sm font-medium text-gray-700">💼 취업지원</span>
+                        </label>
+                        <label class="flex items-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors">
+                            <input type="checkbox" name="support_needs" value="심리지원" class="mr-3 w-4 h-4 text-orange-600 border-gray-300 rounded focus:ring-orange-500">
+                            <span class="text-sm font-medium text-gray-700">💝 심리지원</span>
+                        </label>
+                        <label class="flex items-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors">
+                            <input type="checkbox" name="support_needs" value="의료지원" class="mr-3 w-4 h-4 text-orange-600 border-gray-300 rounded focus:ring-orange-500">
+                            <span class="text-sm font-medium text-gray-700">🏥 의료지원</span>
+                        </label>
+                    </div>
+                </div>
+                
+                <!-- 제출 버튼 -->
+                <div class="pt-6">
+                    <button type="submit" class="btn-primary w-full py-4 text-lg">
+                        <span class="mr-2">🚀</span>
+                        이루다 시작하기
+                    </button>
+                </div>
+            </form>
+            
+            <div class="mt-8 text-center">
+                <div class="relative">
+                    <div class="absolute inset-0 flex items-center">
+                        <div class="w-full border-t border-gray-300"></div>
+                    </div>
+                    <div class="relative flex justify-center text-sm">
+                        <span class="px-2 bg-white text-gray-500">이미 계정이 있으신가요?</span>
+                    </div>
+                </div>
+                
+                <p class="mt-4 text-gray-600">
+                    <a href="{{ url_for('login') }}" class="font-medium text-orange-600 hover:text-orange-500 transition-colors">
+                        로그인하기
+                    </a>
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

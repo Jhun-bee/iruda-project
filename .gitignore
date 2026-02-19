@@ -1,0 +1,49 @@
+# .gitignore 파일 내용
+
+# 환경변수 파일 (중요!)
+.env
+.env.local
+.env.production
+*.env
+
+# Python 관련
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.so
+
+# 가상환경 (venv 사용시)
+venv/
+env/
+ENV/
+
+# 데이터베이스 파일 (개발용)
+*.db
+*.sqlite
+*.sqlite3
+
+# IDE 관련
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# 로그 파일
+*.log
+
+# 임시 파일
+*.tmp
+*.temp
+
+# Windows 관련
+Thumbs.db
+desktop.ini
+
+# Mac 관련  
+.DS_Store
+
+# 업로드된 파일들
+uploads/
+media/

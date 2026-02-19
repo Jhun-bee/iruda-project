@@ -1,0 +1,83 @@
+erDiagram
+    USERS {
+        int id PK "Primary Key, Auto Increment"
+        varchar email UK "Unique, 이메일 주소"
+        varchar password_hash "암호화된 비밀번호"
+        varchar name "사용자 이름"
+        int age "나이"
+        datetime created_at "생성일시"
+        datetime updated_at "수정일시"
+    }
+
+    USER_PROFILES {
+        int id PK "Primary Key, Auto Increment"
+        int user_id FK "Users 테이블 참조"
+        varchar housing_status "주거상황 (자립준비청년, 원룸거주 등)"
+        varchar income_level "소득수준 (50만원이하, 50-100만원 등)"
+        varchar education_level "학력"
+        varchar employment_status "취업상태"
+        int psychological_state "심리상태 (1-10 점수)"
+        text support_needs "필요지원영역 (JSON 배열)"
+        datetime created_at "생성일시"
+        datetime updated_at "수정일시"
+    }
+
+    POLICIES {
+        int id PK "Primary Key, Auto Increment"
+        varchar name "정책명"
+        varchar category "카테고리 (주거, 경제, 교육, 취업, 심리 등)"
+        text description "정책 설명"
+        text eligibility_criteria "자격요건 (JSON)"
+        varchar application_url "신청 URL"
+        text contact_info "연락처 정보 (JSON)"
+        date deadline "신청 마감일"
+        bigint budget_amount "지원 금액"
+        boolean is_active "활성화 여부"
+        datetime created_at "생성일시"
+    }
+
+    ROADMAPS {
+        int id PK "Primary Key, Auto Increment"
+        int user_id FK "Users 테이블 참조"
+        varchar title "로드맵 제목"
+        text description "로드맵 설명"
+        text priority_areas "우선순위 영역 (JSON 배열)"
+        text timeline "타임라인 (JSON 객체)"
+        text ai_recommendations "AI 추천사항 (JSON)"
+        varchar status "상태 (active, completed, paused)"
+        datetime created_at "생성일시"
+        datetime updated_at "수정일시"
+    }
+
+    PROGRESS_TRACKING {
+        int id PK "Primary Key, Auto Increment"
+        int user_id FK "Users 테이블 참조"
+        int roadmap_id FK "Roadmaps 테이블 참조"
+        varchar task_name "할일 이름"
+        varchar task_category "할일 카테고리"
+        varchar status "상태 (pending, in_progress, completed)"
+        int priority "우선순위 (1-5)"
+        date due_date "마감일"
+        date completion_date "완료일"
+        text notes "메모"
+        datetime created_at "생성일시"
+        datetime updated_at "수정일시"
+    }
+
+    USER_FEEDBACK {
+        int id PK "Primary Key, Auto Increment"
+        int user_id FK "Users 테이블 참조"
+        int roadmap_id FK "Roadmaps 테이블 참조"
+        int rating "평점 (1-5)"
+        text feedback_text "피드백 내용"
+        text improvement_suggestions "개선 제안사항"
+        datetime created_at "생성일시"
+    }
+
+    %% 관계 정의
+    USERS ||--|| USER_PROFILES : "has"
+    USERS ||--o{ ROADMAPS : "creates"
+    USERS ||--o{ PROGRESS_TRACKING : "tracks"
+    USERS ||--o{ USER_FEEDBACK : "provides"
+    ROADMAPS ||--o{ PROGRESS_TRACKING : "contains"
+    ROADMAPS ||--o{ USER_FEEDBACK : "receives"

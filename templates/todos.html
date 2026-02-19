@@ -1,0 +1,603 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="max-w-6xl mx-auto">
+        <!-- 페이지 헤더 -->
+        <div class="flex justify-between items-center mb-8">
+            <h1 class="text-3xl font-bold iruda-blue">할 일 관리</h1>
+            <div class="flex items-center space-x-4">
+                <button onclick="checkOverdueTodos()" 
+                        class="bg-yellow-500 text-white px-4 py-2 rounded-lg hover:bg-yellow-600">
+                    ⚠️ 연체 확인
+                </button>
+                <button onclick="rescheduleOverdue()" 
+                        class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600">
+                    🔄 연체 재계획
+                </button>
+                <button onclick="addNewTodo()" 
+                        class="iruda-bg-orange text-white px-4 py-2 rounded-lg hover:opacity-90">
+                    ➕ 새 할 일
+                </button>
+            </div>
+        </div>
+
+        <!-- 통계 카드 -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+            <div class="bg-white rounded-lg shadow p-4">
+                <h3 class="text-sm font-medium text-gray-500">전체 할 일</h3>
+                <p class="text-2xl font-bold text-gray-900" id="totalCount">{{ todos|length }}</p>
+            </div>
+            <div class="bg-white rounded-lg shadow p-4">
+                <h3 class="text-sm font-medium text-gray-500">완료</h3>
+                <p class="text-2xl font-bold text-green-600" id="completedCount">
+                    {{ todos|selectattr('status', 'equalto', 'completed')|list|length }}
+                </p>
+            </div>
+            <div class="bg-white rounded-lg shadow p-4">
+                <h3 class="text-sm font-medium text-gray-500">오늘 마감</h3>
+                <p class="text-2xl font-bold text-orange-600" id="dueTodayCount">
+                    {{ todos|selectattr('is_due_today', 'equalto', true)|list|length }}
+                </p>
+            </div>
+            <div class="bg-white rounded-lg shadow p-4">
+                <h3 class="text-sm font-medium text-gray-500">연체</h3>
+                <p class="text-2xl font-bold text-red-600" id="overdueCount">
+                    {{ todos|selectattr('is_overdue', 'equalto', true)|list|length }}
+                </p>
+            </div>
+        </div>
+
+        <!-- 필터 및 정렬 -->
+        <div class="bg-white rounded-lg shadow p-4 mb-6">
+            <div class="flex flex-wrap gap-4 items-center">
+                <select id="statusFilter" onchange="filterTodos()" 
+                        class="p-2 border border-gray-300 rounded-lg">
+                    <option value="all">모든 상태</option>
+                    <option value="pending">대기중</option>
+                    <option value="in_progress">진행중</option>
+                    <option value="completed">완료</option>
+                </select>
+                
+                <select id="priorityFilter" onchange="filterTodos()" 
+                        class="p-2 border border-gray-300 rounded-lg">
+                    <option value="all">모든 우선순위</option>
+                    <option value="high">높음</option>
+                    <option value="medium">보통</option>
+                    <option value="low">낮음</option>
+                </select>
+                
+                <select id="categoryFilter" onchange="filterTodos()" 
+                        class="p-2 border border-gray-300 rounded-lg">
+                    <option value="all">모든 카테고리</option>
+                    <option value="1개월">1개월</option>
+                    <option value="3개월">3개월</option>
+                    <option value="6개월">6개월</option>
+                </select>
+                
+                <input type="text" id="searchInput" placeholder="할 일 검색..." 
+                       onkeyup="filterTodos()" 
+                       class="p-2 border border-gray-300 rounded-lg flex-1">
+            </div>
+        </div>
+
+        <!-- 할 일 목록 -->
+        <div id="todosList" class="space-y-4">
+            {% if todos %}
+                {% for todo in todos %}
+                <div class="todo-item bg-white rounded-lg shadow p-6 
+                    {% if todo.is_overdue %}border-l-4 border-red-500 bg-red-50{% elif todo.is_due_today %}border-l-4 border-orange-500 bg-orange-50{% elif todo.status == 'completed' %}bg-gray-50 opacity-75{% endif %}"
+                    data-status="{{ todo.status }}" data-priority="{{ todo.priority }}" data-category="{{ todo.category }}">
+                    
+                    <!-- 할 일 헤더 -->
+                    <div class="flex items-start justify-between mb-3">
+                        <div class="flex items-start space-x-3 flex-1">
+                            <!-- 체크박스 -->
+                            <input type="checkbox" 
+                                   class="w-5 h-5 text-orange-600 border-gray-300 rounded focus:ring-orange-500 mt-1"
+                                   {% if todo.status == 'completed' %}checked{% endif %}
+                                   onchange="updateTodoStatus({{ todo.id }}, this.checked)">
+                            
+                            <!-- 할 일 내용 -->
+                            <div class="flex-1">
+                                <h3 class="font-semibold text-lg {% if todo.status == 'completed' %}line-through text-gray-500{% endif %}">
+                                    {{ todo.title }}
+                                </h3>
+                                {% if todo.description %}
+                                    <p class="text-gray-600 text-sm mt-1">{{ todo.description }}</p>
+                                {% endif %}
+                                
+                                <!-- 메타 정보 -->
+                                <div class="flex flex-wrap gap-2 mt-2 text-xs">
+                                    <span class="px-2 py-1 {{ priority_color(todo.priority) }} rounded-full">
+                                        {% if todo.priority == 'high' %}🔴 높음
+                                        {% elif todo.priority == 'medium' %}🟡 보통
+                                        {% else %}🟢 낮음{% endif %}
+                                    </span>
+                                    
+                                    <span class="px-2 py-1 bg-gray-100 text-gray-800 rounded-full">
+                                        📅 {{ format_date(todo.due_date) }}
+                                    </span>
+                                    
+                                    <span class="px-2 py-1 bg-blue-200 text-blue-900 rounded-full font-medium">
+                                        {{ days_until(todo.due_date) }}
+                                    </span>
+                                    
+                                    {% if todo.category %}
+                                        <span class="px-2 py-1 bg-blue-100 text-blue-800 rounded-full">
+                                            📂 {{ todo.category }}
+                                        </span>
+                                    {% endif %}
+                                    
+                                    {% if todo.is_overdue %}
+                                        <span class="px-2 py-1 bg-red-100 text-red-800 rounded-full">
+                                            ⚠️ 연체
+                                        </span>
+                                    {% elif todo.is_due_today %}
+                                        <span class="px-2 py-1 bg-orange-100 text-orange-800 rounded-full">
+                                            ⏰ 오늘 마감
+                                        </span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- 액션 버튼 -->
+                        <div class="flex items-center space-x-2 ml-4">
+                            <button onclick="editTodo({{ todo.id }})" 
+                                    class="p-2 text-blue-600 hover:bg-blue-100 rounded">
+                                ✏️
+                            </button>
+                            <button onclick="deleteTodo({{ todo.id }})" 
+                                    class="p-2 text-red-600 hover:bg-red-100 rounded">
+                                🗑️
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- 상태 변경 버튼 -->
+                    {% if todo.status != 'completed' %}
+                    <div class="flex space-x-2 mt-4">
+                        {% if todo.status == 'pending' %}
+                            <button onclick="changeStatus({{ todo.id }}, 'in_progress')" 
+                                    class="px-3 py-1 bg-blue-500 text-white rounded text-sm hover:bg-blue-600">
+                                ▶️ 시작하기
+                            </button>
+                        {% elif todo.status == 'in_progress' %}
+                            <button onclick="changeStatus({{ todo.id }}, 'completed')" 
+                                    class="px-3 py-1 bg-green-500 text-white rounded text-sm hover:bg-green-600">
+                                ✅ 완료하기
+                            </button>
+                            <button onclick="changeStatus({{ todo.id }}, 'pending')" 
+                                    class="px-3 py-1 bg-gray-500 text-white rounded text-sm hover:bg-gray-600">
+                                ⏸️ 일시정지
+                            </button>
+                        {% endif %}
+                    </div>
+                    {% else %}
+                    <div class="mt-4">
+                        <span class="px-3 py-1 bg-green-100 text-green-800 rounded text-sm">
+                            ✅ 완료됨 {% if todo.completed_at %}({{ format_date(todo.completed_at[:10]) }}){% endif %}
+                        </span>
+                        <button onclick="changeStatus({{ todo.id }}, 'pending')" 
+                                class="ml-2 px-3 py-1 bg-gray-500 text-white rounded text-sm hover:bg-gray-600">
+                            🔄 다시 열기
+                        </button>
+                    </div>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="bg-white rounded-lg shadow p-12 text-center">
+                    <div class="w-24 h-24 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
+                        <span class="text-4xl">📋</span>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-2">할 일이 없습니다</h3>
+                    <p class="text-gray-600 mb-4">로드맵에서 할 일을 생성하거나 직접 추가해보세요!</p>
+                    <button onclick="addNewTodo()" 
+                            class="iruda-bg-orange text-white px-4 py-2 rounded-lg hover:opacity-90">
+                        ➕ 새 할 일 추가
+                    </button>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- 할 일 편집 모달 -->
+<div id="editTodoModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-lg max-w-md w-full p-6">
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="text-xl font-bold">할 일 편집</h3>
+            <button onclick="closeEditModal()" class="text-gray-400 hover:text-gray-600 text-2xl">×</button>
+        </div>
+        
+        <form id="editTodoForm" class="space-y-4">
+            <input type="hidden" id="editTodoId">
+            
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">제목</label>
+                <input type="text" id="editTitle" required
+                       class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500">
+            </div>
+            
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">설명</label>
+                <textarea id="editDescription" rows="3"
+                          class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500"></textarea>
+            </div>
+            
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">마감일</label>
+                    <input type="date" id="editDueDate" required
+                           class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500">
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">우선순위</label>
+                    <select id="editPriority" 
+                            class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500">
+                        <option value="low">낮음</option>
+                        <option value="medium">보통</option>
+                        <option value="high">높음</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="flex justify-end space-x-4 pt-4">
+                <button type="button" onclick="closeEditModal()" 
+                        class="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600">
+                    취소
+                </button>
+                <button type="submit" 
+                        class="iruda-bg-orange text-white px-4 py-2 rounded-lg hover:opacity-90">
+                    저장
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- 새 할 일 추가 모달 -->
+<div id="addTodoModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-lg max-w-md w-full p-6">
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="text-xl font-bold">새 할 일 추가</h3>
+            <button onclick="closeAddModal()" class="text-gray-400 hover:text-gray-600 text-2xl">×</button>
+        </div>
+        
+        <form id="addTodoForm" class="space-y-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">제목</label>
+                <input type="text" id="newTitle" required
+                       class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500">
+            </div>
+            
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">설명</label>
+                <textarea id="newDescription" rows="3"
+                          class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500"></textarea>
+            </div>
+            
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">마감일</label>
+                    <input type="date" id="newDueDate" required
+                           class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500">
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">우선순위</label>
+                    <select id="newPriority" 
+                            class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500">
+                        <option value="medium">보통</option>
+                        <option value="low">낮음</option>
+                        <option value="high">높음</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="flex justify-end space-x-4 pt-4">
+                <button type="button" onclick="closeAddModal()" 
+                        class="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600">
+                    취소
+                </button>
+                <button type="submit" 
+                        class="iruda-bg-orange text-white px-4 py-2 rounded-lg hover:opacity-90">
+                    추가
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+// Todo 상태 업데이트
+function updateTodoStatus(todoId, isCompleted) {
+    const status = isCompleted ? 'completed' : 'pending';
+    
+    fetch(`/todos/${todoId}/update-status`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({status: status})
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            location.reload(); // 페이지 새로고침으로 UI 업데이트
+        } else {
+            alert('상태 업데이트에 실패했습니다.');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('오류가 발생했습니다.');
+    });
+}
+
+// 상태 변경
+function changeStatus(todoId, newStatus) {
+    fetch(`/todos/${todoId}/update-status`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({status: newStatus})
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        } else {
+            alert('상태 변경에 실패했습니다.');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('오류가 발생했습니다.');
+    });
+}
+
+// Todo 삭제
+function deleteTodo(todoId) {
+    if (confirm('정말로 이 할 일을 삭제하시겠습니까?')) {
+        fetch(`/todos/${todoId}/delete`, {
+            method: 'DELETE'
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('삭제에 실패했습니다.');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('오류가 발생했습니다.');
+        });
+    }
+}
+
+// 페이지 로드 시 알림 확인
+document.addEventListener('DOMContentLoaded', function() {
+    checkNotifications();
+});
+
+// 알림 확인
+function checkNotifications() {
+    fetch('/notifications')
+    .then(response => response.json())
+    .then(data => {
+        if (data.success && data.notifications.length > 0) {
+            showNotifications(data.notifications);
+        }
+    })
+    .catch(error => console.error('Notification error:', error));
+}
+
+// 알림 표시
+function showNotifications(notifications) {
+    let message = "새로운 알림이 있습니다:\n\n";
+    notifications.forEach(notif => {
+        message += `• ${notif.message}\n`;
+    });
+    
+    if (confirm(message + "\n할 일 페이지에서 확인하시겠습니까?")) {
+        // 이미 할 일 페이지에 있으므로 필터 업데이트
+        filterTodos();
+    }
+}
+</script>
+
+<style>
+.line-through {
+    text-decoration: line-through;
+}
+
+.todo-item {
+    transition: all 0.3s ease;
+}
+
+.todo-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+@media (max-width: 768px) {
+    .grid.grid-cols-4 {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .flex.flex-wrap.gap-4 {
+        flex-direction: column;
+        gap: 1rem;
+    }
+}
+</style>
+{% endblock %}니다.');
+        });
+    }
+}
+
+// Todo 편집 모달 열기
+function editTodo(todoId) {
+    // 해당 Todo의 데이터 찾기
+    const todoElement = document.querySelector(`[data-todo-id="${todoId}"]`);
+    // 실제 구현에서는 서버에서 데이터를 가져와야 함
+    document.getElementById('editTodoId').value = todoId;
+    document.getElementById('editTodoModal').classList.remove('hidden');
+}
+
+// 편집 모달 닫기
+function closeEditModal() {
+    document.getElementById('editTodoModal').classList.add('hidden');
+}
+
+// 편집 폼 제출
+document.getElementById('editTodoForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const todoId = document.getElementById('editTodoId').value;
+    const data = {
+        title: document.getElementById('editTitle').value,
+        description: document.getElementById('editDescription').value,
+        due_date: document.getElementById('editDueDate').value,
+        priority: document.getElementById('editPriority').value
+    };
+    
+    fetch(`/todos/${todoId}/edit`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            closeEditModal();
+            location.reload();
+        } else {
+            alert('수정에 실패했습니다.');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('오류가 발생했습니다.');
+    });
+});
+
+// 새 할 일 추가 모달 열기
+function addNewTodo() {
+    // 기본 날짜 설정 (오늘 + 7일)
+    const defaultDate = new Date();
+    defaultDate.setDate(defaultDate.getDate() + 7);
+    document.getElementById('newDueDate').value = defaultDate.toISOString().split('T')[0];
+    
+    document.getElementById('addTodoModal').classList.remove('hidden');
+}
+
+// 추가 모달 닫기
+function closeAddModal() {
+    document.getElementById('addTodoModal').classList.add('hidden');
+}
+
+// 새 할 일 추가 폼 제출
+document.getElementById('addTodoForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const data = {
+        title: document.getElementById('newTitle').value,
+        description: document.getElementById('newDescription').value,
+        due_date: document.getElementById('newDueDate').value,
+        priority: document.getElementById('newPriority').value
+    };
+    
+    fetch('/todos/add', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            closeAddModal();
+            location.reload();
+        } else {
+            alert('추가에 실패했습니다.');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('오류가 발생했습니다.');
+    });
+});
+
+// 필터링 기능
+function filterTodos() {
+    const statusFilter = document.getElementById('statusFilter').value;
+    const priorityFilter = document.getElementById('priorityFilter').value;
+    const categoryFilter = document.getElementById('categoryFilter').value;
+    const searchInput = document.getElementById('searchInput').value.toLowerCase();
+    
+    const todoItems = document.querySelectorAll('.todo-item');
+    
+    todoItems.forEach(item => {
+        const status = item.dataset.status;
+        const priority = item.dataset.priority;
+        const category = item.dataset.category;
+        const title = item.querySelector('h3').textContent.toLowerCase();
+        
+        let show = true;
+        
+        if (statusFilter !== 'all' && status !== statusFilter) show = false;
+        if (priorityFilter !== 'all' && priority !== priorityFilter) show = false;
+        if (categoryFilter !== 'all' && category !== categoryFilter) show = false;
+        if (searchInput && !title.includes(searchInput)) show = false;
+        
+        item.style.display = show ? 'block' : 'none';
+    });
+}
+
+// 연체 할 일 확인
+function checkOverdueTodos() {
+    const overdueItems = document.querySelectorAll('.todo-item[data-status="pending"], .todo-item[data-status="in_progress"]');
+    const overdueTodos = [];
+    
+    overdueItems.forEach(item => {
+        if (item.classList.contains('border-red-500')) {
+            overdueTodos.push(item.querySelector('h3').textContent);
+        }
+    });
+    
+    if (overdueTodos.length > 0) {
+        alert(`연체된 할 일이 ${overdueTodos.length}개 있습니다:\n${overdueTodos.join('\n')}`);
+    } else {
+        alert('연체된 할 일이 없습니다!');
+    }
+}
+
+// 연체 할 일 재계획
+function rescheduleOverdue() {
+    if (confirm('연체된 할 일들을 자동으로 재계획하시겠습니까?')) {
+        fetch('/todos/reschedule-overdue', {
+            method: 'POST'
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert(data.message);
+                location.reload();
+            } else {
+                alert('재계획에 실패했습니다.');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('오류가 발생했습

@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="max-w-2xl mx-auto">
+        <h1 class="text-3xl font-bold iruda-blue mb-8">내 정보 수정</h1>
+        
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <form method="POST" class="space-y-6">
+                <!-- 기본 정보 -->
+                <div class="border-b border-gray-200 pb-6">
+                    <h3 class="text-lg font-semibold mb-4">기본 정보</h3>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">이름</label>
+                            <input type="text" name="name" value="{{ user.name }}" 
+                                   class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">이메일</label>
+                            <input type="email" name="email" value="{{ user.email }}" 
+                                   class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500">
+                        </div>
+                    </div>
+                    
+                    <div class="mt-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">나이</label>
+                        <input type="number" name="age" value="{{ user.age }}" 
+                               class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500">
+                    </div>
+                </div>
+
+                <!-- 프로필 정보 -->
+                <div class="border-b border-gray-200 pb-6">
+                    <h3 class="text-lg font-semibold mb-4">프로필 정보</h3>
+                    
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">주거 상황</label>
+                            <select name="housing_status" 
+                                    class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500">
+                                <option value="자립준비청소년" {% if profile.housing_status == '자립준비청소년' %}selected{% endif %}>자립준비청소년</option>
+                                <option value="원룸거주" {% if profile.housing_status == '원룸거주' %}selected{% endif %}>원룸 거주</option>
+                                <option value="쉐어하우스" {% if profile.housing_status == '쉐어하우스' %}selected{% endif %}>쉐어하우스</option>
+                                <option value="기타" {% if profile.housing_status == '기타' %}selected{% endif %}>기타</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">소득 수준</label>
+                            <select name="income_level" 
+                                    class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500">
+                                <option value="50만원 이하" {% if profile.income_level == '50만원 이하' %}selected{% endif %}>50만원 이하</option>
+                                <option value="50-100만원" {% if profile.income_level == '50-100만원' %}selected{% endif %}>50-100만원</option>
+                                <option value="100-150만원" {% if profile.income_level == '100-150만원' %}selected{% endif %}>100-150만원</option>
+                                <option value="150만원 이상" {% if profile.income_level == '150만원 이상' %}selected{% endif %}>150만원 이상</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">필요한 지원 영역</label>
+                            <div class="grid grid-cols-2 gap-2">
+                                {% for need in ['주거지원', '경제지원', '교육지원', '취업지원', '심리지원', '의료지원'] %}
+                                <label class="flex items-center">
+                                    <input type="checkbox" name="support_needs" value="{{ need }}" 
+                                           {% if need in profile.support_needs %}checked{% endif %} class="mr-2">
+                                    {{ need }}
+                                </label>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 비밀번호 변경 -->
+                <div>
+                    <h3 class="text-lg font-semibold mb-4">비밀번호 변경</h3>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">현재 비밀번호</label>
+                            <input type="password" name="current_password" 
+                                   class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">새 비밀번호</label>
+                            <input type="password" name="new_password" 
+                                   class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">새 비밀번호 확인</label>
+                            <input type="password" name="confirm_password" 
+                                   class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 저장 버튼 -->
+                <div class="flex justify-end space-x-4">
+                    <a href="{{ url_for('dashboard') }}" 
+                       class="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50">
+                        취소
+                    </a>
+                    <button type="submit" 
+                            class="iruda-bg-orange text-white px-6 py-3 rounded-lg hover:opacity-90">
+                        저장하기
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

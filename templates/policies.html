@@ -1,0 +1,285 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="max-w-6xl mx-auto">
+        <!-- 페이지 헤더 -->
+        <div class="flex justify-between items-center mb-8">
+            <h1 class="text-3xl font-bold iruda-blue">지원정책 바로찾기</h1>
+            <div class="flex items-center space-x-4">
+                <button onclick="openApplicationForm()" 
+                        class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600">
+                    📝 신청양식 만들기
+                </button>
+                <button onclick="recommendPolicies()" 
+                        class="iruda-bg-orange text-white px-4 py-2 rounded-lg hover:opacity-90">
+                    🎯 맞춤 추천
+                </button>
+            </div>
+        </div>
+
+        <!-- 검색 및 필터 -->
+        <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div class="md:col-span-2">
+                    <input type="text" id="searchInput" placeholder="정책명, 기관명, 지원내용으로 검색..." 
+                           value="{{ request.args.get('search', '') }}"
+                           class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500">
+                </div>
+                <select id="categoryFilter" 
+                        class="p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500">
+                    <option value="">전체 구분</option>
+                    <option value="중앙부처">중앙부처</option>
+                    <option value="지자체">지자체</option>
+                    <option value="민간">민간</option>
+                </select>
+                <button onclick="searchPolicies()" 
+                        class="iruda-bg-blue text-white px-4 py-2 rounded-lg hover:opacity-90">
+                    🔍 검색
+                </button>
+            </div>
+            
+            <!-- 빠른 필터 태그 -->
+            <div class="flex flex-wrap gap-2 mt-4">
+                <span class="text-sm text-gray-600">빠른 검색:</span>
+                <button onclick="quickSearch('주거')" class="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm hover:bg-blue-200">🏠 주거지원</button>
+                <button onclick="quickSearch('생계')" class="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm hover:bg-green-200">💰 생계지원</button>
+                <button onclick="quickSearch('취업')" class="px-3 py-1 bg-purple-100 text-purple-800 rounded-full text-sm hover:bg-purple-200">💼 취업지원</button>
+                <button onclick="quickSearch('교육')" class="px-3 py-1 bg-yellow-100 text-yellow-800 rounded-full text-sm hover:bg-yellow-200">📚 교육지원</button>
+                <button onclick="quickSearch('의료')" class="px-3 py-1 bg-red-100 text-red-800 rounded-full text-sm hover:bg-red-200">🏥 의료지원</button>
+            </div>
+        </div>
+
+        <!-- 정책 목록 -->
+        <div id="policiesContainer">
+            {% if policies %}
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {% for policy in policies %}
+                        <div class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow">
+                            <!-- 정책 헤더 -->
+                            <div class="flex justify-between items-start mb-3">
+                                <h3 class="text-lg font-semibold iruda-blue line-clamp-2">{{ policy.서비스명 }}</h3>
+                                <span class="px-2 py-1 text-xs rounded-full
+                                    {% if policy.구분 == '중앙부처' %}bg-blue-100 text-blue-800
+                                    {% elif policy.구분 == '지자체' %}bg-green-100 text-green-800
+                                    {% else %}bg-purple-100 text-purple-800{% endif %}">
+                                    {{ policy.구분 }}
+                                </span>
+                            </div>
+
+                            <!-- 새로운 매칭 정보 추가 -->
+                            {% if policy.get('_match_info') %}
+                            <div class="match-info mb-3 p-2 bg-gray-50 rounded-lg">
+                                <div class="flex items-center justify-between text-sm">
+                                    <span class="text-gray-600">
+                                        관련도: <span class="font-medium text-blue-600">{{ (policy._match_info.semantic_score * 100)|round }}%</span>
+                                    </span>
+                                    {% if policy._match_info.eligible %}
+                                        <span class="px-2 py-1 text-xs bg-green-100 text-green-800 rounded-full">✅ 신청 가능</span>
+                                    {% else %}
+                                        <span class="px-2 py-1 text-xs bg-yellow-100 text-yellow-800 rounded-full">⚠️ 조건 확인 필요</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            {% endif %}
+
+                            <!-- 기관 정보 -->
+                            <div class="text-sm text-gray-600 mb-3">
+                                <p><strong>기관:</strong> {{ policy.기관명 }}</p>
+                                {% if policy.연락처 %}
+                                    <p><strong>연락처:</strong> {{ policy.연락처 }}</p>
+                                {% endif %}
+                            </div>
+
+                            <!-- 지원 대상 -->
+                            <div class="mb-3">
+                                <p class="text-sm font-medium text-gray-700 mb-1">지원대상:</p>
+                                <p class="text-xs text-gray-600 line-clamp-3">{{ policy.지원대상 }}</p>
+                            </div>
+
+                            <!-- 지원 내용 -->
+                            <div class="mb-4">
+                                <p class="text-sm font-medium text-gray-700 mb-1">지원내용:</p>
+                                <p class="text-xs text-gray-600 line-clamp-2">{{ policy.지원내용 }}</p>
+                            </div>
+
+                            <!-- 신청 방법 -->
+                            <div class="mb-4">
+                                <p class="text-sm font-medium text-gray-700 mb-1">신청방법:</p>
+                                <p class="text-xs text-gray-600 line-clamp-2">{{ policy.신청방법 }}</p>
+                            </div>
+
+                            <!-- 액션 버튼들 -->
+                            <div class="flex space-x-2">
+                                <button onclick="showPolicyDetail({{ loop.index0 }})" 
+                                        class="flex-1 bg-blue-500 text-white px-3 py-2 rounded text-sm hover:bg-blue-600">
+                                    📋 자세히
+                                </button>
+                                <button onclick="createApplication('{{ policy.서비스명 }}')" 
+                                        class="flex-1 iruda-bg-orange text-white px-3 py-2 rounded text-sm hover:opacity-90">
+                                    📝 신청하기
+                                </button>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+
+                <!-- 페이지네이션 -->
+                <div class="flex justify-center mt-8">
+                    <div class="flex space-x-2">
+                        <button class="px-3 py-2 border rounded hover:bg-gray-50">이전</button>
+                        <button class="px-3 py-2 bg-orange-500 text-white rounded">1</button>
+                        <button class="px-3 py-2 border rounded hover:bg-gray-50">2</button>
+                        <button class="px-3 py-2 border rounded hover:bg-gray-50">다음</button>
+                    </div>
+                </div>
+            {% else %}
+                <div class="bg-white rounded-lg shadow-md p-12 text-center">
+                    <div class="w-24 h-24 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
+                        <span class="text-4xl">🔍</span>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-2">검색 결과가 없습니다</h3>
+                    <p class="text-gray-600 mb-4">다른 검색어로 시도해보시거나 필터를 조정해보세요.</p>
+                    <button onclick="recommendPolicies()" 
+                            class="iruda-bg-orange text-white px-4 py-2 rounded-lg hover:opacity-90">
+                        🎯 맞춤 정책 추천받기
+                    </button>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- 정책 상세 모달 -->
+<div id="policyDetailModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+        <div class="p-6">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-2xl font-bold iruda-blue" id="modalPolicyTitle">정책 상세정보</h3>
+                <button onclick="closePolicyDetail()" class="text-gray-400 hover:text-gray-600 text-2xl">×</button>
+            </div>
+            <div id="modalPolicyContent"></div>
+            <div class="flex justify-end space-x-4 mt-6 pt-4 border-t">
+                <button onclick="createApplication()" id="modalApplyBtn"
+                        class="iruda-bg-orange text-white px-4 py-2 rounded-lg hover:opacity-90">
+                    📝 신청서 작성
+                </button>
+                <button onclick="closePolicyDetail()" 
+                        class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600">
+                    닫기
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+const allPolicies = {{ policies|tojson|safe }};
+let currentPolicyIndex = 0;
+
+function searchPolicies() {
+    const searchTerm = document.getElementById('searchInput').value;
+    const category = document.getElementById('categoryFilter').value;
+    
+    let url = '/policies?';
+    if (searchTerm) url += `search=${encodeURIComponent(searchTerm)}&`;
+    if (category) url += `category=${encodeURIComponent(category)}&`;
+    
+    window.location.href = url;
+}
+
+function quickSearch(keyword) {
+    document.getElementById('searchInput').value = keyword;
+    searchPolicies();
+}
+
+function showPolicyDetail(index) {
+    currentPolicyIndex = index;
+    const policy = allPolicies[index];
+    
+    document.getElementById('modalPolicyTitle').textContent = policy.서비스명;
+    document.getElementById('modalApplyBtn').setAttribute('onclick', `createApplication('${policy.서비스명}')`);
+    
+    const content = `
+        <div class="space-y-4">
+            <div>
+                <h4 class="font-semibold text-gray-800 mb-2">기관 정보</h4>
+                <p><strong>기관명:</strong> ${policy.기관명}</p>
+                ${policy.연락처 ? `<p><strong>연락처:</strong> ${policy.연락처}</p>` : ''}
+            </div>
+            <div>
+                <h4 class="font-semibold text-gray-800 mb-2">지원대상</h4>
+                <p class="text-sm text-gray-700">${policy.지원대상}</p>
+            </div>
+            <div>
+                <h4 class="font-semibold text-gray-800 mb-2">지원내용</h4>
+                <p class="text-sm text-gray-700">${policy.지원내용}</p>
+            </div>
+            <div>
+                <h4 class="font-semibold text-gray-800 mb-2">신청방법</h4>
+                <p class="text-sm text-gray-700">${policy.신청방법}</p>
+            </div>
+        </div>
+    `;
+    
+    document.getElementById('modalPolicyContent').innerHTML = content;
+    document.getElementById('policyDetailModal').classList.remove('hidden');
+}
+
+function closePolicyDetail() {
+    document.getElementById('policyDetailModal').classList.add('hidden');
+}
+
+function createApplication(policyName) {
+    window.open(`/application-form?policy=${encodeURIComponent(policyName)}`, '_blank');
+}
+
+function openApplicationForm() {
+    window.open('/application-form', '_blank');
+}
+
+function recommendPolicies() {
+    fetch('/policies/recommend', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // 추천 결과로 페이지 새로고침
+            window.location.href = '/policies?recommended=true';
+        } else {
+            alert('추천 정책을 불러오는데 실패했습니다.');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('오류가 발생했습니다.');
+    });
+}
+
+// 검색어 입력시 엔터키 처리
+document.getElementById('searchInput').addEventListener('keypress', function(event) {
+    if (event.key === 'Enter') {
+        searchPolicies();
+    }
+});
+</script>
+
+<style>
+.line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+.line-clamp-3 {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+</style>
+{% endblock %}

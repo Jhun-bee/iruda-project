@@ -1,0 +1,308 @@
+{% extends "base.html" %}
+
+{% block content %}
+<!-- 히어로 섹션 -->
+<section class="relative min-h-screen flex items-center justify-center overflow-hidden">
+    <!-- 네온 메시/블롭 배경 -->
+    <div class="absolute inset-0 hero-mesh">
+        <span class="fx-blob pink float-slow" style="top:-10%; left:-5%; width:40vw; height:40vw; opacity:.7"></span>
+        <span class="fx-blob cyan float-slow" style="top:20%; right:-10%; width:45vw; height:45vw; animation-delay:.8s; opacity:.7"></span>
+        <span class="fx-blob violet float-slow" style="bottom:-15%; left:25%; width:50vw; height:50vw; animation-delay:1.4s; opacity:.65"></span>
+    </div>
+
+    <!-- 메인 콘텐츠 -->
+    <div class="relative z-10 container mx-auto px-4 text-center">
+        <!-- 브랜드 로고 및 타이틀 -->
+        <div class="mb-8 animate-fadeInDown">
+            <div class="inline-flex items-center justify-center w-24 h-24 rounded-2xl mb-6 shadow-2xl shadow-glow" style="background: linear-gradient(135deg, rgba(99,102,241,0.6), rgba(56,189,248,0.6));">
+                <!-- Illustrative Shooting Star -->
+                <svg width="46" height="46" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <defs>
+                        <linearGradient id="starGrad" x1="6" y1="6" x2="42" y2="42" gradientUnits="userSpaceOnUse">
+                            <stop stop-color="#A78BFA"/>
+                            <stop offset="1" stop-color="#38BDF8"/>
+                        </linearGradient>
+                    </defs>
+                    <path d="M20 8c1.2-3.2 6.8-3.2 8 0l2.1 5.6 5.8 2c3.1 1.1 3.1 5.7 0 6.8l-5.8 2L28 30c-1.2 3.2-6.8 3.2-8 0l-2.1-5.6-5.8-2c-3.1-1.1-3.1-5.7 0-6.8l5.8-2L20 8z" fill="url(#starGrad)"/>
+                    <path d="M4 40c8-6 14-8 24-10" stroke="#93C5FD" stroke-width="2.2" stroke-linecap="round" opacity=".7"/>
+                    <path d="M10 44c6-4 12-6 18-7" stroke="#F0ABFC" stroke-width="1.8" stroke-linecap="round" opacity=".6"/>
+                </svg>
+            </div>
+            <h1 class="text-5xl md:text-7xl font-extrabold gradient-text mb-4 tracking-tight">
+                이루다
+            </h1>
+            <p class="text-lg md:text-2xl text-gray-700 mb-2 font-medium">
+                기술의 날카로움과 정서의 따뜻함이 만나는
+            </p>
+            <p class="text-base md:text-xl text-gray-600 mb-8">
+                자립준비청년을 위한 차세대 지원 플랫폼
+            </p>
+        </div>
+        
+        <!-- CTA 버튼들 -->
+        <div class="mb-16 animate-fadeInUp">
+            {% if not current_user.is_authenticated %}
+                <div class="flex flex-col sm:flex-row gap-4 justify-center items-center">
+                    <a href="{{ url_for('register') }}" class="btn-primary text-lg px-8 py-4 hover-lift shadow-glow">
+                        <span class="mr-2">✨</span>
+                        이루다 시작하기
+                    </a>
+                    <a href="{{ url_for('login') }}" class="btn-secondary text-lg px-8 py-4 hover-lift">
+                        <span class="mr-2">🔑</span>
+                        로그인
+                    </a>
+                </div>
+            {% else %}
+                <a href="{{ url_for('dashboard') }}" class="btn-primary text-lg px-8 py-4 hover-lift shadow-glow">
+                    <span class="mr-2">🚀</span>
+                    내 대시보드로 가기
+                </a>
+            {% endif %}
+        </div>
+        
+        <!-- 특징 카드들 -->
+        <div class="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8 animate-fadeInUp">
+            <div class="card card-interactive group">
+                <div class="mx-auto mb-4 tile group-hover:scale-105 transition-transform">
+                    <img src="https://images.unsplash.com/photo-1545235617-9465d2a55698?q=80&w=400&auto=format&fit=crop" alt="개인화 로드맵 일러스트" />
+                </div>
+                <h3 class="text-xl font-bold text-gray-900 mb-3">개인화된 로드맵</h3>
+                <p class="text-medium leading-relaxed">AI가 분석한 맞춤형 자립 계획을 제공하여 체계적인 목표 달성을 도와드립니다</p>
+            </div>
+            
+            <div class="card card-interactive group">
+                <div class="mx-auto mb-4 tile group-hover:scale-105 transition-transform">
+                    <img src="https://images.unsplash.com/photo-1521737604893-d14cc237f11d?q=80&w=400&auto=format&fit=crop" alt="원스톱 서비스 일러스트" />
+                </div>
+                <h3 class="text-xl font-bold text-gray-900 mb-3">원스톱 서비스</h3>
+                <p class="text-medium leading-relaxed">모든 지원 과정을 하나의 플랫폼에서 해결하여 복잡한 절차를 단순화합니다</p>
+            </div>
+            
+            <div class="card card-interactive group">
+                <div class="mx-auto mb-4 tile group-hover:scale-105 transition-transform">
+                    <img src="https://images.unsplash.com/photo-1511988617509-a57c8a288659?q=80&w=400&auto=format&fit=crop" alt="지속적 지원 일러스트" />
+                </div>
+                <h3 class="text-xl font-bold text-gray-900 mb-3">지속적 지원</h3>
+                <p class="text-medium leading-relaxed">일회성이 아닌 순환적 장기 지원 시스템으로 꾸준한 성장을 응원합니다</p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 스크롤 인디케이터 -->
+    <div class="absolute bottom-8 left-1/2 transform -translate-x-1/2 animate-bounce">
+        <div class="w-6 h-10 border-2 border-gray-400 rounded-full flex justify-center">
+            <div class="w-1 h-3 bg-gray-400 rounded-full mt-2 animate-pulse"></div>
+        </div>
+    </div>
+</section>
+
+<!-- 서비스 소개 섹션 -->
+<section class="py-20" style="background: linear-gradient(180deg, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0.2) 100%); position: relative;">
+    <!-- 상단 물결 장식 -->
+    <div class="absolute left-0 right-0 -mt-20" aria-hidden="true">
+        <svg viewBox="0 0 1440 120" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none" style="display:block;width:100%;height:120px">
+            <path d="M0,64 C240,96 480,0 720,32 C960,64 1200,128 1440,96 L1440,0 L0,0 Z" fill="url(#waveGrad1)" opacity="0.25"/>
+            <path d="M0,80 C240,112 480,16 720,48 C960,80 1200,144 1440,112 L1440,0 L0,0 Z" fill="url(#waveGrad2)" opacity="0.35"/>
+            <defs>
+                <linearGradient id="waveGrad1" x1="0" y1="0" x2="1" y2="0">
+                    <stop offset="0%" stop-color="#A78BFA"/>
+                    <stop offset="100%" stop-color="#38BDF8"/>
+                </linearGradient>
+                <linearGradient id="waveGrad2" x1="0" y1="0" x2="1" y2="0">
+                    <stop offset="0%" stop-color="#F472B6"/>
+                    <stop offset="100%" stop-color="#93C5FD"/>
+                </linearGradient>
+            </defs>
+        </svg>
+    </div>
+    <!-- 미래지향적 그리드 오버레이 -->
+    <div class="fx-grid"></div>
+    <div class="container mx-auto px-4">
+        <div class="text-center mb-16">
+            <h2 class="text-4xl font-extrabold text-gray-900 mb-4">이루다가 제공하는 서비스</h2>
+            <p class="text-xl text-gray-700 max-w-2xl mx-auto">
+                자립준비청년을 위한 종합적인 지원 플랫폼으로, 여러분의 꿈을 현실로 만들어드립니다
+            </p>
+        </div>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+            <!-- AI 상담 -->
+            <div class="text-center group">
+                <div class="w-20 h-20 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform shadow-glow" style="background: linear-gradient(135deg, rgba(99,102,241,0.35), rgba(56,189,248,0.25));">
+                    <!-- Bot SVG -->
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <rect x="4" y="7" width="16" height="10" rx="5" stroke="white" stroke-width="1.5"/>
+                        <circle cx="9" cy="12" r="1.5" fill="white"/>
+                        <circle cx="15" cy="12" r="1.5" fill="white"/>
+                        <path d="M12 7V4" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
+                        <circle cx="12" cy="3" r="1" fill="white"/>
+                    </svg>
+                </div>
+                <h3 class="text-lg font-bold text-gray-800 mb-2">AI 상담</h3>
+                <p class="text-gray-700 text-sm">24시간 언제든지 AI 상담사와 대화하며 고민을 나누세요</p>
+            </div>
+            
+            <!-- 정책 검색 -->
+            <div class="text-center group">
+                <div class="w-20 h-20 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform shadow-glow" style="background: linear-gradient(135deg, rgba(56,189,248,0.35), rgba(99,102,241,0.25));">
+                    <!-- Search/Policy SVG -->
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M11 19a8 8 0 100-16 8 8 0 000 16z" stroke="white" stroke-width="1.5"/>
+                        <path d="M21 21l-3.5-3.5" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
+                    </svg>
+                </div>
+                <h3 class="text-lg font-bold text-gray-800 mb-2">정책 검색</h3>
+                <p class="text-gray-700 text-sm">맞춤형 정부 지원정책을 쉽고 빠르게 찾아보세요</p>
+            </div>
+            
+            <!-- 로드맵 관리 -->
+            <div class="text-center group">
+                <div class="w-20 h-20 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform shadow-glow" style="background: linear-gradient(135deg, rgba(163,230,53,0.35), rgba(99,102,241,0.25));">
+                    <!-- Clipboard SVG -->
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <rect x="6" y="5" width="12" height="14" rx="2" stroke="white" stroke-width="1.5"/>
+                        <rect x="9" y="3" width="6" height="4" rx="1" stroke="white" stroke-width="1.5"/>
+                        <path d="M8.5 10h7" stroke="white" stroke-width="1.5"/>
+                        <path d="M8.5 14h7" stroke="white" stroke-width="1.5"/>
+                    </svg>
+                </div>
+                <h3 class="text-lg font-bold text-gray-800 mb-2">로드맵 관리</h3>
+                <p class="text-gray-700 text-sm">체계적인 계획 수립과 단계별 목표 관리를 지원합니다</p>
+            </div>
+            
+            <!-- 할일 관리 -->
+            <div class="text-center group">
+                <div class="w-20 h-20 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform shadow-glow" style="background: linear-gradient(135deg, rgba(244,114,182,0.35), rgba(56,189,248,0.25));">
+                    <!-- Check SVG -->
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M20 6L9 17l-5-5" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </div>
+                <h3 class="text-lg font-bold text-gray-800 mb-2">할일 관리</h3>
+                <p class="text-gray-700 text-sm">일상의 작은 실천들을 체계적으로 관리해보세요</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- 통계 섹션 -->
+<section class="py-20" style="background: linear-gradient(180deg, rgba(255,255,255,0.02) 0%, rgba(255,255,255,0.01) 100%); position: relative;">
+    <!-- 꿈(별가루) 장식 -->
+    <div class="pointer-events-none absolute inset-0" aria-hidden="true" style="mask-image: radial-gradient(60% 40% at 50% 50%, black, transparent);">
+        <svg viewBox="0 0 600 200" xmlns="http://www.w3.org/2000/svg" style="position:absolute;left:50%;top:0;transform:translateX(-50%);opacity:.25">
+            <defs>
+                <radialGradient id="spark" cx="50%" cy="50%" r="50%">
+                    <stop offset="0%" stop-color="#FDE68A"/>
+                    <stop offset="100%" stop-color="#FDE68A" stop-opacity="0"/>
+                </radialGradient>
+            </defs>
+            <circle cx="80" cy="40" r="4" fill="url(#spark)"/>
+            <circle cx="200" cy="80" r="3" fill="url(#spark)"/>
+            <circle cx="320" cy="30" r="5" fill="url(#spark)"/>
+            <circle cx="440" cy="90" r="3.5" fill="url(#spark)"/>
+            <circle cx="520" cy="50" r="4.5" fill="url(#spark)"/>
+        </svg>
+    </div>
+    <div class="container mx-auto px-4">
+        <div class="text-center mb-16">
+            <h2 class="text-4xl font-extrabold text-gray-900 mb-4">이루다와 함께하는 여정</h2>
+            <p class="text-xl text-gray-700">이미 많은 분들이 이루다와 함께 자립의 길을 걷고 있습니다</p>
+        </div>
+        
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+            <div class="stat-card">
+            <div class="stat-icon" style="background: linear-gradient(135deg, rgba(45,212,255,0.25), rgba(124,58,237,0.25)); color:#8BD7FF;">
+                    <span class="text-2xl">👥</span>
+                </div>
+            <div class="stat-number" style="color:#8BD7FF;">1,250+</div>
+            <div class="stat-label" style="color:#b9dfff;">활성 사용자</div>
+            </div>
+            
+            <div class="stat-card">
+            <div class="stat-icon" style="background: linear-gradient(135deg, rgba(163,230,53,0.25), rgba(124,58,237,0.25)); color:#B6F27E;">
+                    <span class="text-2xl">🎯</span>
+                </div>
+            <div class="stat-number" style="color:#B6F27E;">3,500+</div>
+            <div class="stat-label" style="color:#d8ffc1;">완료된 목표</div>
+            </div>
+            
+            <div class="stat-card">
+            <div class="stat-icon" style="background: linear-gradient(135deg, rgba(255,45,149,0.25), rgba(45,212,255,0.25)); color:#FF8BC0;">
+                    <span class="text-2xl">💬</span>
+                </div>
+            <div class="stat-number" style="color:#FF8BC0;">15,000+</div>
+            <div class="stat-label" style="color:#ffd0e6;">AI 상담 세션</div>
+            </div>
+            
+            <div class="stat-card">
+            <div class="stat-icon" style="background: linear-gradient(135deg, rgba(124,58,237,0.25), rgba(45,212,255,0.25)); color:#C7B6FF;">
+                    <span class="text-2xl">🏆</span>
+                </div>
+            <div class="stat-number" style="color:#C7B6FF;">95%</div>
+            <div class="stat-label" style="color:#e4dcff;">만족도</div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- CTA 섹션 -->
+<section class="py-20 text-white" style="background: radial-gradient(800px 400px at 20% 0%, rgba(124,58,237,0.2), transparent 60%), radial-gradient(800px 400px at 80% 100%, rgba(45,212,255,0.2), transparent 60%), linear-gradient(180deg, #4F46E5 0%, #1D4ED8 100%); position: relative;">
+    <!-- 하단 물결 장식 -->
+    <div class="absolute left-0 right-0 -top-20" aria-hidden="true">
+        <svg viewBox="0 0 1440 120" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none" style="display:block;width:100%;height:120px">
+            <path d="M0,64 C240,96 480,0 720,32 C960,64 1200,128 1440,96 L1440,0 L0,0 Z" fill="url(#waveGrad3)" opacity="0.35"/>
+            <defs>
+                <linearGradient id="waveGrad3" x1="0" y1="0" x2="1" y2="0">
+                    <stop offset="0%" stop-color="#A78BFA"/>
+                    <stop offset="100%" stop-color="#38BDF8"/>
+                </linearGradient>
+            </defs>
+        </svg>
+    </div>
+    <div class="container mx-auto px-4 text-center">
+        <h2 class="text-4xl font-extrabold mb-4">지금 시작하세요</h2>
+        <p class="text-xl mb-8 opacity-90">여러분의 자립 여정을 이루다가 함께하겠습니다</p>
+        
+        {% if not current_user.is_authenticated %}
+            <div class="flex flex-col sm:flex-row gap-4 justify-center items-center">
+                <a href="{{ url_for('register') }}" class="btn-primary px-8 py-4 font-semibold inline-flex items-center justify-center">
+                    <span class="mr-2">🚀</span>
+                    무료로 시작하기
+                </a>
+                <a href="{{ url_for('login') }}" class="btn-secondary px-8 py-4 font-semibold inline-flex items-center justify-center">
+                    <span class="mr-2">👋</span>
+                    이미 계정이 있으신가요?
+                </a>
+            </div>
+        {% else %}
+            <a href="{{ url_for('dashboard') }}" class="btn-primary px-8 py-4 font-semibold inline-block">
+                <span class="mr-2">📊</span>
+                내 대시보드 보기
+            </a>
+        {% endif %}
+    </div>
+</section>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // 스크롤 애니메이션
+    const observerOptions = {
+        threshold: 0.1,
+        rootMargin: '0px 0px -50px 0px'
+    };
+    
+    const observer = new IntersectionObserver(function(entries) {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('animate-fadeInUp');
+            }
+        });
+    }, observerOptions);
+    
+    // 관찰할 요소들 선택
+    document.querySelectorAll('.stat-card, .card').forEach(card => {
+        observer.observe(card);
+    });
+});
+</script>
+{% endblock %}

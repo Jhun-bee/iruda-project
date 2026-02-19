@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>이루다 프로젝트 간트 차트</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 10px;
+            font-size: 2.2em;
+            font-weight: 700;
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: #7f8c8d;
+            margin-bottom: 30px;
+            font-size: 1.1em;
+        }
+        
+        .gantt-container {
+            overflow-x: auto;
+            margin-top: 20px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            min-width: 1200px;
+        }
+        
+        th, td {
+            border: 1px solid #e1e8ed;
+            padding: 8px;
+            text-align: center;
+            font-size: 11px;
+        }
+        
+        th {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            font-weight: 600;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        
+        .task-name {
+            text-align: left;
+            font-weight: 600;
+            background: #f8f9fa;
+            width: 280px;
+            color: #2c3e50;
+            font-size: 12px;
+        }
+        
+        .week-header {
+            writing-mode: vertical-lr;
+            text-orientation: mixed;
+            width: 25px;
+            font-size: 10px;
+        }
+        
+        .task-bar {
+            height: 20px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 10px;
+            margin: 2px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .phase1 { background: linear-gradient(45deg, #ff6b6b, #ff8e8e); }
+        .phase2 { background: linear-gradient(45deg, #4ecdc4, #7bdff2); }
+        .phase3 { background: linear-gradient(45deg, #45b7d1, #96c8da); }
+        .phase4 { background: linear-gradient(45deg, #f9ca24, #f0932b); }
+        .phase5 { background: linear-gradient(45deg, #6c5ce7, #a29bfe); }
+        .phase6 { background: linear-gradient(45deg, #fd79a8, #fdcb6e); }
+        .phase7 { background: linear-gradient(45deg, #00b894, #55a3ff); }
+        
+        .milestone {
+            background: linear-gradient(45deg, #2d3436, #636e72) !important;
+            position: relative;
+        }
+        
+        .milestone::after {
+            content: '🏆';
+            position: absolute;
+            right: 5px;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+        
+        .legend {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 15px;
+            margin: 20px 0;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        
+        .legend-color {
+            width: 20px;
+            height: 12px;
+            border-radius: 6px;
+        }
+        
+        .critical-path {
+            border: 2px solid #e74c3c !important;
+            box-shadow: 0 0 10px rgba(231, 76, 60, 0.3);
+        }
+        
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+        }
+        
+        .stat-number {
+            font-size: 1.8em;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        .week-number {
+            font-size: 9px;
+            color: #666;
+        }
+        
+        .today-marker {
+            background: #e74c3c !important;
+            opacity: 0.8;
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                padding: 15px;
+            }
+            
+            h1 {
+                font-size: 1.8em;
+            }
+            
+            .task-name {
+                width: 200px;
+                font-size: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 이루다 프로젝트 간트 차트</h1>
+        <p class="subtitle">자립청소년 지원을 위한 AI 컨설팅 Agent 개발 일정 (2024.09.05 - 2024.11.07)</p>
+        
+        <div class="stats">
+            <div class="stat-card">
+                <div class="stat-number">64일</div>
+                <div>총 프로젝트 기간</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">14개</div>
+                <div>주요 활동</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">9주</div>
+                <div>개발 기간</div>
+            </div>
+        </div>
+        
+        <div class="legend">
+            <div class="legend-item">
+                <div class="legend-color phase1"></div>
+                <span>Phase 1: 분석&설계</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color phase2"></div>
+                <span>Phase 2: 데이터&모델</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color phase3"></div>
+                <span>Phase 3: 핵심기능</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color phase4"></div>
+                <span>Phase 4: 백엔드</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color phase5"></div>
+                <span>Phase 5: 프론트엔드</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color phase6"></div>
+                <span>Phase 6: 배포&테스트</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color phase7"></div>
+                <span>Phase 7: 운영</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: linear-gradient(45deg, #2d3436, #636e72);"></div>
+                <span>🏆 마일스톤</span>
+            </div>
+        </div>
+        
+        <div class="gantt-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th class="task-name">활동명</th>
+                        <th class="week-header">9/5<br><span class="week-number">W1</span></th>
+                        <th class="week-header">9/12<br><span class="week-number">W2</span></th>
+                        <th class="week-header">9/19<br><span class="week-number">W3</span></th>
+                        <th class="week-header">9/26<br><span class="week-number">W4</span></th>
+                        <th class="week-header">10/3<br><span class="week-number">W5</span></th>
+                        <th class="week-header">10/10<br><span class="week-number">W6</span></th>
+                        <th class="week-header">10/17<br><span class="week-number">W7</span></th>
+                        <th class="week-header">10/24<br><span class="week-number">W8</span></th>
+                        <th class="week-header">10/31<br><span class="week-number">W9</span></th>
+                        <th class="week-header">11/7<br><span class="week-number">W10</span></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="task-name">📊 요구사항 분석 및 데이터 수집</td>
+                        <td><div class="task-bar phase1">분석</div></td>
+                        <td><div class="task-bar phase1">수집</div></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td class="task-name">🗄️ ERD 및 DB 설계</td>
+                        <td></td>
+                        <td><div class="task-bar phase1">설계</div></td>
+                        <td><div class="task-bar phase1">구축</div></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td class="task-name">🧹 데이터 정제 및 적재</td>
+                        <td></td>
+                        <td></td>
+                        <td><div class="task-bar phase2">정제</div></td>
+                        <td><div class="task-bar phase2">적재</div></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td class="task-name">🤖 LLM 모델 연동 및 파인튜닝</td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td><div class="task-bar phase2 critical-path">모델연동</div></td>
+                        <td><div class="task-bar phase2 critical-path">파인튜닝</div></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td class="task-name">🎯 정책 추천 로직 구현</td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td><div class="task-bar phase3 critical-path">추천로직</div></td>
+                        <td><div class="task-bar phase3">최적화</div></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td class="task-name">🗺️ 사용자 자립 로드맵 기능</td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td><div class="task-bar phase3 critical-path">로드맵</div></td>
+                        <td><div class="task-bar phase3">개인화</div></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td class="task-name">💬 상담 기능 개발</td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td><div class="task-bar phase3">챗봇</div></td>
+                        <td><div class="task-bar phase3">대화기록</div></td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td class="task-name">📝 신청서 작성 지원 기능</td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td><div class="task-bar phase3">자동작성</div></td>
+                        <td><div class="task-bar phase3">가이드</div></td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td class="task-name">⚙️ 백엔드 API 개발</td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td><div class="task-bar phase4">API설계</div></td>
+                        <td><div class="task-bar phase4 critical-path">핵심API</div></td>
+                        <td><div class="task-bar phase4 critical-path">통합</div></td>
+                        <td><div class="task-bar phase4">최적화</div></td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td class="task-name">🎨 프론트엔드 개발</td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td><div class="task-bar phase5">UI설계</div></td>
+                        <td><div class="task-bar phase5 critical-path">React개발</div></td>
+                        <td><div class="task-bar phase5 critical-path">통합</div></td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td class="task-name">🐳 컨테이너화 및 배포</td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td><div class="task-bar phase6">Docker</div></td>
+                        <td><div class="task-bar phase6 critical-path">클라우드배포</div></td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td class="task-name">🧪 테스트 및 QA</td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td><div class="task-bar phase6 critical-path">통합테스트</div></td>
+                        <td><div class="task-bar phase6">QA</div></td>
+                    </tr>
+                    <tr>
+                        <td class="task-name">👥 시범 운영 및 피드백</td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td><div class="task-bar phase7">시범운영</div></td>
+                    </tr>
+                    <tr>
+                        <td class="task-name">🚀 최종 배포 및 운영</td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td><div class="task-bar phase7 critical-path">런칭</div></td>
+                    </tr>
+                    <tr style="background: #fff3cd; border: 2px solid #ffc107;">
+                        <td class="task-name" style="font-weight: bold; color: #856404;">🏆 <strong>발표일 (11/7)</strong></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td><div class="task-bar milestone">발표</div></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        
+        <div style="margin-top: 30px; padding: 20px; background: #e8f4f8; border-radius: 10px; border-left: 5px solid #667eea;">
+            <h3 style="color: #2c3e50; margin: 0 0 15px 0;">📋 주요 마일스톤</h3>
+            <ul style="margin: 0; padding-left: 20px; color: #34495e;">
+                <li><strong>9/19 (W3):</strong> DB 설계 완료 및 데이터 정제 시작</li>
+                <li><strong>10/3 (W5):</strong> LLM 모델 연동 및 정책 추천 로직 구현 시작</li>
+                <li><strong>10/17 (W7):</strong> 핵심 기능 개발 완료</li>
+                <li><strong>10/31 (W9):</strong> 프론트엔드 통합 및 배포 준비</li>
+                <li><strong>11/7 (W10):</strong> 최종 발표 및 프로젝트 완료 🎉</li>
+            </ul>
+        </div>
+        
+        <div style="margin-top: 20px; padding: 15px; background: #fee2e2; border-radius: 10px; border-left: 5px solid #ef4444;">
+            <h4 style="color: #dc2626; margin: 0 0 10px 0;">⚠️ 중요 고려사항</h4>
+            <p style="margin: 0; color: #7f1d1d; font-size: 14px;">
+                <strong>크리티컬 패스:</strong> LLM 모델 연동 → 정책 추천 로직 → 사용자 로드맵 → 백엔드 API → 프론트엔드 통합<br>
+                <strong>리스크:</strong> 모델 파인튜닝 지연 시 전체 일정에 영향을 줄 수 있음
+            </p>
+        </div>
+    </div>
+</body>
+</html>

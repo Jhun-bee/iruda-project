@@ -1,0 +1,250 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="max-w-6xl mx-auto">
+        <!-- 페이지 헤더 -->
+        <div class="flex justify-between items-center mb-8">
+            <h1 class="text-3xl font-bold iruda-blue">{{ current_user.name }}님의 미래설계 로드맵</h1>
+            <button onclick="generateNewRoadmap()" 
+                    class="iruda-bg-orange text-white px-4 py-2 rounded-lg hover:opacity-90">
+                🔄 새 로드맵 생성
+            </button>
+        </div>
+
+        {% if roadmap %}
+            <!-- 로드맵 요약 -->
+            <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+                <h2 class="text-2xl font-semibold mb-4">{{ roadmap.title }}</h2>
+                <p class="text-gray-600 mb-4">{{ roadmap.description }}</p>
+                
+                <div class="flex flex-wrap gap-2 mb-4">
+                    {% for area in roadmap.priority_areas %}
+                        <span class="bg-orange-100 text-orange-800 px-3 py-1 rounded-full text-sm">
+                            {{ area }}
+                        </span>
+                    {% endfor %}
+                </div>
+
+                <!-- 진행률 표시 -->
+                <div class="w-full bg-gray-200 rounded-full h-2.5">
+                    <div class="bg-orange-500 h-2.5 rounded-full" style="width: {{ progress_percentage }}%"></div>
+                </div>
+                <p class="text-sm text-gray-600 mt-2">전체 진행률: {{ progress_percentage }}%</p>
+            </div>
+
+            <!-- 단기 목표 카드들 -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                {% for period, goals in roadmap.timeline.items() %}
+                    <div class="bg-white rounded-lg shadow-md p-6 relative">
+                        <!-- 기간 헤더 -->
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="text-lg font-semibold iruda-blue">{{ period }} 목표</h3>
+                            <span class="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">
+                                {{ goals|length }}개 항목
+                            </span>
+                        </div>
+
+                        <!-- 목표 리스트 -->
+                        <ul class="space-y-3 mb-4">
+                            {% for goal in goals %}
+                                <li class="flex items-start">
+                                    <span class="text-orange-500 mr-2 mt-1">•</span>
+                                    <span class="text-sm flex-1">{{ goal }}</span>
+                                </li>
+                            {% endfor %}
+                        </ul>
+
+                        <!-- 상세플랜 버튼 -->
+                        <button 
+                            onclick="openDetailPlan('{{ period }}', {{ goals|tojson|safe }})"
+                            class="w-full bg-gradient-to-r from-blue-500 to-orange-500 text-white py-2 px-4 rounded-lg hover:opacity-90 transition-opacity"
+                        >
+                            📋 상세플랜 보기
+                        </button>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <!-- 로드맵이 없을 때 -->
+            <div class="bg-white rounded-lg shadow-md p-8 text-center">
+                <div class="w-24 h-24 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
+                    <span class="text-4xl">🗺️</span>
+                </div>
+                <h2 class="text-2xl font-semibold mb-4">아직 로드맵이 없습니다</h2>
+                <p class="text-gray-600 mb-6">AI가 분석한 맞춤형 로드맵을 생성해보세요!</p>
+                <button onclick="generateRoadmap()" 
+                        class="iruda-bg-orange text-white px-6 py-3 rounded-lg font-semibold hover:opacity-90">
+                    🚀 로드맵 생성하기
+                </button>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- 상세플랜 모달 -->
+<div id="detailPlanModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+        <div class="p-6">
+            <!-- 모달 헤더 -->
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-2xl font-bold iruda-blue" id="modalTitle">상세플랜</h3>
+                <button onclick="closeDetailPlan()" class="text-gray-400 hover:text-gray-600 text-2xl">×</button>
+            </div>
+
+            <!-- 상세플랜 내용 -->
+            <div id="detailPlanContent"></div>
+
+            <!-- 모달 하단 버튼들 -->
+            <div class="flex justify-end space-x-4 mt-6 pt-4 border-t">
+                <button onclick="convertToTodos()" 
+                        class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600">
+                    ✅ Todo로 변환
+                </button>
+                <button onclick="closeDetailPlan()" 
+                        class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600">
+                    닫기
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let currentPeriod = '';
+let currentGoals = [];
+
+function openDetailPlan(period, goals) {
+    currentPeriod = period;
+    currentGoals = goals;
+    
+    document.getElementById('modalTitle').textContent = `${period} 상세플랜`;
+    
+    // 상세플랜 요청
+    fetch('/roadmap/detail-plan', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            period: period,
+            goals: goals
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            displayDetailPlan(data.detail_plan);
+        } else {
+            document.getElementById('detailPlanContent').innerHTML = 
+                '<p class="text-red-600">상세플랜을 불러오는데 실패했습니다.</p>';
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        document.getElementById('detailPlanContent').innerHTML = 
+            '<p class="text-red-600">오류가 발생했습니다.</p>';
+    });
+
+    document.getElementById('detailPlanModal').classList.remove('hidden');
+}
+
+function displayDetailPlan(detailPlan) {
+    let html = '<div class="space-y-6">';
+    
+    detailPlan.forEach((plan, index) => {
+        html += `
+            <div class="border border-gray-200 rounded-lg p-4">
+                <h4 class="font-semibold text-lg mb-3 iruda-blue">${plan.title}</h4>
+                <div class="space-y-2">
+        `;
+        
+        plan.tasks.forEach(task => {
+            // '지원'이나 '신청' 키워드가 있는지 확인
+            const hasSupport = /지원|신청/g.test(task);
+            if (hasSupport) {
+                // 지원/신청 부분을 클릭 가능하게 만들기
+                const highlightedTask = task.replace(/(지원|신청)/g, 
+                    '<span class="text-orange-600 font-semibold cursor-pointer hover:underline" onclick="openPolicySearch(\'$1\')">$1</span>'
+                );
+                html += `<p class="text-sm text-gray-700">• ${highlightedTask}</p>`;
+            } else {
+                html += `<p class="text-sm text-gray-700">• ${task}</p>`;
+            }
+        });
+        
+        html += `
+                </div>
+                <div class="mt-3 text-xs text-gray-500">
+                    예상 소요시간: ${plan.estimated_time || '1-2주'}
+                </div>
+            </div>
+        `;
+    });
+    
+    html += '</div>';
+    document.getElementById('detailPlanContent').innerHTML = html;
+}
+
+function closeDetailPlan() {
+    document.getElementById('detailPlanModal').classList.add('hidden');
+}
+
+function convertToTodos() {
+    fetch('/roadmap/convert-to-todos', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            period: currentPeriod,
+            goals: currentGoals
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('할 일 목록으로 추가되었습니다!');
+            closeDetailPlan();
+        } else {
+            alert('변환에 실패했습니다: ' + data.error);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('오류가 발생했습니다.');
+    });
+}
+
+function openPolicySearch(type) {
+    const searchQuery = type === '지원' ? '지원정책' : '신청서류';
+    window.open(`/policies?search=${encodeURIComponent(searchQuery)}`, '_blank');
+}
+
+function generateRoadmap() {
+    fetch('/generate-roadmap', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        } else {
+            alert('로드맵 생성에 실패했습니다: ' + data.error);
+        }
+    })
+    .catch(error => {
+        alert('오류가 발생했습니다: ' + error);
+    });
+}
+
+function generateNewRoadmap() {
+    if (confirm('새로운 로드맵을 생성하시겠습니까? 기존 로드맵은 백업됩니다.')) {
+        generateRoadmap();
+    }
+}
+</script>
+{% endblock %}

@@ -1,0 +1,393 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="max-w-4xl mx-auto">
+        <!-- 페이지 헤더 -->
+        <div class="text-center mb-8">
+            <h1 class="text-3xl font-bold iruda-blue mb-4">AI 신청서 자동 생성</h1>
+            <p class="text-gray-600">정책 정보를 바탕으로 맞춤형 신청서를 자동 생성해드립니다</p>
+        </div>
+
+        <!-- 정책 선택 -->
+        <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+            <h2 class="text-xl font-semibold mb-4">1. 신청할 정책 선택</h2>
+            {% if policy_name %}
+                <div class="bg-blue-50 p-4 rounded-lg">
+                    <h3 class="font-semibold text-blue-800">선택된 정책</h3>
+                    <p class="text-blue-700">{{ policy_name }}</p>
+                    <input type="hidden" id="selectedPolicy" value="{{ policy_name }}">
+                </div>
+            {% else %}
+                <div class="space-y-4">
+                    <input type="text" id="policySearch" placeholder="정책명을 검색하세요..." 
+                           class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500">
+                    <div id="policyResults" class="hidden space-y-2 max-h-40 overflow-y-auto">
+                        <!-- 검색 결과가 여기에 표시됩니다 -->
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- 개인 정보 입력 -->
+        <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+            <h2 class="text-xl font-semibold mb-4">2. 개인 정보 확인</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">이름</label>
+                    <input type="text" id="userName" value="{% if current_user %}{{ current_user.name }}{% endif %}"
+                           class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">생년월일</label>
+                    <input type="date" id="birthDate"
+                           class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">전화번호</label>
+                    <input type="tel" id="phoneNumber" placeholder="010-0000-0000"
+                           class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">이메일</label>
+                    <input type="email" id="email" value="{% if current_user %}{{ current_user.email }}{% endif %}"
+                           class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500">
+                </div>
+                <div class="md:col-span-2">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">주소</label>
+                    <input type="text" id="address" placeholder="서울시 강남구..."
+                           class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500">
+                </div>
+            </div>
+        </div>
+
+        <!-- 추가 정보 입력 -->
+        <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+            <h2 class="text-xl font-semibold mb-4">3. 추가 정보</h2>
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">월 소득</label>
+                    <select id="monthlyIncome" 
+                            class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500">
+                        <option value="">소득 수준을 선택하세요</option>
+                        <option value="없음">없음</option>
+                        <option value="50만원 이하">50만원 이하</option>
+                        <option value="50-100만원">50-100만원</option>
+                        <option value="100-150만원">100-150만원</option>
+                        <option value="150-200만원">150-200만원</option>
+                        <option value="200만원 이상">200만원 이상</option>
+                    </select>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">현재 상황</label>
+                    <div class="grid grid-cols-2 md:grid-cols-3 gap-2">
+                        <label class="flex items-center">
+                            <input type="checkbox" name="currentStatus" value="자립준비청년" class="mr-2">
+                            자립준비청년
+                        </label>
+                        <label class="flex items-center">
+                            <input type="checkbox" name="currentStatus" value="대학생" class="mr-2">
+                            대학생
+                        </label>
+                        <label class="flex items-center">
+                            <input type="checkbox" name="currentStatus" value="취업준비생" class="mr-2">
+                            취업준비생
+                        </label>
+                        <label class="flex items-center">
+                            <input type="checkbox" name="currentStatus" value="직장인" class="mr-2">
+                            직장인
+                        </label>
+                        <label class="flex items-center">
+                            <input type="checkbox" name="currentStatus" value="무직" class="mr-2">
+                            무직
+                        </label>
+                        <label class="flex items-center">
+                            <input type="checkbox" name="currentStatus" value="기타" class="mr-2">
+                            기타
+                        </label>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">신청 사유</label>
+                    <textarea id="applicationReason" rows="4" placeholder="지원이 필요한 구체적인 사유를 작성해주세요..."
+                              class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500"></textarea>
+                </div>
+            </div>
+        </div>
+
+        <!-- 생성 버튼 -->
+        <div class="text-center mb-6">
+            <button onclick="generateApplicationForm()" 
+                    class="iruda-bg-orange text-white px-8 py-3 rounded-lg font-semibold hover:opacity-90 transition-opacity">
+                🤖 AI 신청서 생성하기
+            </button>
+        </div>
+
+        <!-- 생성된 신청서 -->
+        <div id="generatedForm" class="hidden bg-white rounded-lg shadow-md p-6">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-xl font-semibold">생성된 신청서</h2>
+                <div class="space-x-2">
+                    <button onclick="editForm()" 
+                            class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600">
+                        ✏️ 수정
+                    </button>
+                    <button onclick="downloadForm()" 
+                            class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600">
+                        💾 다운로드
+                    </button>
+                    <button onclick="printForm()" 
+                            class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600">
+                        🖨️ 인쇄
+                    </button>
+                </div>
+            </div>
+            
+            <div id="formContent" class="prose max-w-none">
+                <!-- 생성된 신청서 내용이 여기에 표시됩니다 -->
+            </div>
+            
+            <!-- 필요 서류 안내 -->
+            <div id="requiredDocuments" class="mt-6 p-4 bg-yellow-50 rounded-lg">
+                <h3 class="font-semibold text-yellow-800 mb-2">📋 필요 서류</h3>
+                <ul id="documentList" class="list-disc pl-5 text-sm text-yellow-700">
+                    <!-- 필요 서류 목록이 여기에 표시됩니다 -->
+                </ul>
+            </div>
+
+            <!-- 제출 방법 안내 -->
+            <div id="submissionGuide" class="mt-4 p-4 bg-blue-50 rounded-lg">
+                <h3 class="font-semibold text-blue-800 mb-2">📮 제출 방법</h3>
+                <div id="submissionInfo" class="text-sm text-blue-700">
+                    <!-- 제출 방법 정보가 여기에 표시됩니다 -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 로딩 모달 -->
+<div id="loadingModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center">
+    <div class="bg-white rounded-lg p-8 text-center">
+        <div class="animate-spin w-12 h-12 border-4 border-orange-500 border-t-transparent rounded-full mx-auto mb-4"></div>
+        <h3 class="text-lg font-semibold mb-2">AI가 신청서를 생성하고 있습니다...</h3>
+        <p class="text-gray-600 text-sm">잠시만 기다려주세요.</p>
+    </div>
+</div>
+
+<script>
+// 정책 검색 기능
+document.getElementById('policySearch')?.addEventListener('input', function(e) {
+    const query = e.target.value.trim();
+    if (query.length > 2) {
+        searchPolicies(query);
+    } else {
+        document.getElementById('policyResults').classList.add('hidden');
+    }
+});
+
+function searchPolicies(query) {
+    // 실제 구현에서는 서버에서 정책 검색
+    // 여기서는 임시로 클라이언트 사이드에서 처리
+    fetch(`/policies/search?q=${encodeURIComponent(query)}`)
+    .then(response => response.json())
+    .then(data => {
+        displayPolicyResults(data.policies || []);
+    })
+    .catch(error => {
+        console.error('Policy search error:', error);
+    });
+}
+
+function displayPolicyResults(policies) {
+    const resultsDiv = document.getElementById('policyResults');
+    
+    if (policies.length === 0) {
+        resultsDiv.innerHTML = '<p class="text-gray-500 p-2">검색 결과가 없습니다.</p>';
+    } else {
+        resultsDiv.innerHTML = policies.map(policy => `
+            <div class="p-2 hover:bg-gray-100 cursor-pointer rounded" onclick="selectPolicy('${policy.name}')">
+                <h4 class="font-medium">${policy.name}</h4>
+                <p class="text-sm text-gray-600">${policy.agency || ''}</p>
+            </div>
+        `).join('');
+    }
+    
+    resultsDiv.classList.remove('hidden');
+}
+
+function selectPolicy(policyName) {
+    document.getElementById('selectedPolicy').value = policyName;
+    document.getElementById('policySearch').value = policyName;
+    document.getElementById('policyResults').classList.add('hidden');
+}
+
+// AI 신청서 생성
+function generateApplicationForm() {
+    // 입력 데이터 수집
+    const formData = collectFormData();
+    
+    // 유효성 검사
+    if (!validateFormData(formData)) {
+        return;
+    }
+    
+    // 로딩 모달 표시
+    document.getElementById('loadingModal').classList.remove('hidden');
+    
+    // AI API 호출
+    fetch('/generate-application-form', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            displayGeneratedForm(data.form_content, data.required_documents, data.submission_info);
+        } else {
+            alert('신청서 생성에 실패했습니다: ' + data.error);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('오류가 발생했습니다.');
+    })
+    .finally(() => {
+        document.getElementById('loadingModal').classList.add('hidden');
+    });
+}
+
+function collectFormData() {
+    const currentStatus = Array.from(document.querySelectorAll('input[name="currentStatus"]:checked'))
+                              .map(cb => cb.value);
+    
+    return {
+        policy_name: document.getElementById('selectedPolicy')?.value || document.getElementById('policySearch')?.value,
+        user_name: document.getElementById('userName').value,
+        birth_date: document.getElementById('birthDate').value,
+        phone_number: document.getElementById('phoneNumber').value,
+        email: document.getElementById('email').value,
+        address: document.getElementById('address').value,
+        monthly_income: document.getElementById('monthlyIncome').value,
+        current_status: currentStatus,
+        application_reason: document.getElementById('applicationReason').value
+    };
+}
+
+function validateFormData(formData) {
+    if (!formData.policy_name) {
+        alert('신청할 정책을 선택해주세요.');
+        return false;
+    }
+    if (!formData.user_name) {
+        alert('이름을 입력해주세요.');
+        return false;
+    }
+    if (!formData.birth_date) {
+        alert('생년월일을 입력해주세요.');
+        return false;
+    }
+    if (!formData.phone_number) {
+        alert('전화번호를 입력해주세요.');
+        return false;
+    }
+    if (!formData.application_reason) {
+        alert('신청 사유를 작성해주세요.');
+        return false;
+    }
+    return true;
+}
+
+function displayGeneratedForm(formContent, requiredDocuments, submissionInfo) {
+    document.getElementById('formContent').innerHTML = formContent;
+    
+    // 필요 서류 표시
+    const documentList = document.getElementById('documentList');
+    documentList.innerHTML = requiredDocuments.map(doc => `<li>${doc}</li>`).join('');
+    
+    // 제출 방법 표시
+    document.getElementById('submissionInfo').innerHTML = submissionInfo;
+    
+    // 생성된 폼 섹션 표시
+    document.getElementById('generatedForm').classList.remove('hidden');
+    
+    // 생성된 폼으로 스크롤
+    document.getElementById('generatedForm').scrollIntoView({ behavior: 'smooth' });
+}
+
+function editForm() {
+    // 편집 모드로 전환
+    const formContent = document.getElementById('formContent');
+    const currentContent = formContent.innerHTML;
+    
+    formContent.innerHTML = `
+        <div class="space-y-4">
+            <textarea class="w-full h-96 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500" 
+                      id="editableContent">${currentContent.replace(/<[^>]*>/g, '')}</textarea>
+            <div class="flex space-x-2">
+                <button onclick="saveEdits()" 
+                        class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600">
+                    저장
+                </button>
+                <button onclick="cancelEdit('${currentContent.replace(/'/g, "\\\'")}')" 
+                        class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600">
+                    취소
+                </button>
+            </div>
+        </div>
+    `;
+}
+
+function saveEdits() {
+    const editedContent = document.getElementById('editableContent').value;
+    document.getElementById('formContent').innerHTML = `<div class="whitespace-pre-wrap">${editedContent}</div>`;
+}
+
+function cancelEdit(originalContent) {
+    document.getElementById('formContent').innerHTML = originalContent;
+}
+
+function downloadForm() {
+    const formContent = document.getElementById('formContent').innerText;
+    const blob = new Blob([formContent], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = '신청서.txt';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+}
+
+function printForm() {
+    const formContent = document.getElementById('generatedForm').innerHTML;
+    const printWindow = window.open('', '_blank');
+    printWindow.document.write(`
+        <html>
+        <head>
+            <title>신청서</title>
+            <style>
+                body { font-family: Arial, sans-serif; margin: 20px; }
+                .prose { max-width: none; }
+                @media print { 
+                    button { display: none; } 
+                    .no-print { display: none; }
+                }
+            </style>
+        </head>
+        <body>
+            ${formContent}
+        </body>
+        </html>
+    `);
+    printWindow.document.close();
+    printWindow.print();
+}
+</script>
+{% endblock %}

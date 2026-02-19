@@ -1,0 +1,250 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="min-h-screen bg-gradient-to-br from-blue-50 to-orange-50">
+    <!-- 헤더 인사말 -->
+    <div class="container mx-auto px-4 py-8">
+        <div class="text-center mb-8">
+            <h1 class="text-4xl font-bold iruda-blue mb-4">
+                {{ current_user.name }}님, 안녕하세요! 👋
+            </h1>
+            <p class="text-xl text-gray-600">오늘은 어떤 하루를 보내고 계신가요?</p>
+        </div>
+
+        <!-- 중앙 대화창 -->
+        <div class="max-w-4xl mx-auto mb-12">
+            <div class="bg-white rounded-2xl shadow-lg p-6" id="chatContainer">
+                <!-- 대화 헤더 -->
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-xl font-semibold iruda-blue flex items-center">
+                        🤖 이루다와 대화하기
+                        <span class="ml-2 px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full">온라인</span>
+                    </h3>
+                    <button onclick="clearChat()" class="text-gray-400 hover:text-gray-600">
+                        🗑️ 초기화
+                    </button>
+                </div>
+
+                <!-- 대화 영역 -->
+                <div id="chatMessages" class="h-80 overflow-y-auto mb-4 p-4 bg-gray-50 rounded-lg">
+                    <div class="message bot-message mb-3">
+                        <div class="flex items-start">
+                            <div class="w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center text-white text-sm font-bold mr-3">
+                                AI
+                            </div>
+                            <div class="bg-white p-3 rounded-lg shadow-sm max-w-xs">
+                                <p class="text-sm">안녕하세요! 무엇을 도와드릴까요? 로드맵 설계나 지원정책 찾기를 도와드릴 수 있어요! 😊</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 입력 영역 -->
+                <div class="flex space-x-2">
+                    <input 
+                        type="text" 
+                        id="chatInput" 
+                        placeholder="궁금한 것을 물어보세요..."
+                        class="flex-1 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500"
+                        onkeypress="handleKeyPress(event)"
+                    >
+                    <button 
+                        onclick="sendMessage()" 
+                        class="iruda-bg-orange text-white px-6 py-3 rounded-lg hover:opacity-90 flex items-center"
+                    >
+                        전송 📤
+                    </button>
+                </div>
+
+                <!-- 빠른 버튼들 -->
+                <div class="flex flex-wrap gap-2 mt-4">
+                    <button onclick="quickMessage('로드맵을 만들고 싶어요')" 
+                            class="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm hover:bg-blue-200">
+                        🗺️ 로드맵 만들기
+                    </button>
+                    <button onclick="quickMessage('지원정책을 찾고 있어요')" 
+                            class="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm hover:bg-green-200">
+                        💰 지원정책 찾기
+                    </button>
+                    <button onclick="quickMessage('오늘 할 일을 알고 싶어요')" 
+                            class="px-3 py-1 bg-purple-100 text-purple-800 rounded-full text-sm hover:bg-purple-200">
+                        ✅ 할 일 확인
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 메인 버튼들 -->
+        <div class="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8">
+            <!-- 미래설계 로드맵 버튼 -->
+            <div class="bg-white rounded-2xl shadow-lg p-8 text-center hover:shadow-xl transition-shadow cursor-pointer" onclick="location.href='/roadmap'">
+                <div class="w-20 h-20 iruda-bg-blue rounded-full flex items-center justify-center mx-auto mb-4">
+                    <span class="text-3xl">🗺️</span>
+                </div>
+                <h3 class="text-2xl font-bold iruda-blue mb-2">미래설계 로드맵</h3>
+                <p class="text-gray-600 mb-4">AI가 분석한 맞춤형 자립 계획을 확인하고 관리하세요</p>
+                <div class="iruda-bg-blue text-white px-6 py-2 rounded-lg inline-block">
+                    로드맵 보기 →
+                </div>
+            </div>
+
+            <!-- 지원정책 바로찾기 버튼 -->
+            <div class="bg-white rounded-2xl shadow-lg p-8 text-center hover:shadow-xl transition-shadow cursor-pointer" onclick="location.href='/policies'">
+                <div class="w-20 h-20 iruda-bg-orange rounded-full flex items-center justify-center mx-auto mb-4">
+                    <span class="text-3xl">💰</span>
+                </div>
+                <h3 class="text-2xl font-bold iruda-orange mb-2">지원정책 바로찾기</h3>
+                <p class="text-gray-600 mb-4">나에게 맞는 정부 지원정책을 쉽게 찾아보세요</p>
+                <div class="iruda-bg-orange text-white px-6 py-2 rounded-lg inline-block">
+                    정책 찾기 →
+                </div>
+            </div>
+        </div>
+
+        <!-- 최근 활동 요약 -->
+        <div class="max-w-4xl mx-auto mt-12">
+            <h3 class="text-2xl font-bold iruda-blue mb-6">최근 활동</h3>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="bg-white p-4 rounded-lg shadow">
+                    <h4 class="font-semibold mb-2">진행중인 할 일</h4>
+                    <p class="text-2xl font-bold text-orange-600" id="activeTasks">-</p>
+                </div>
+                <div class="bg-white p-4 rounded-lg shadow">
+                    <h4 class="font-semibold mb-2">완료한 할 일</h4>
+                    <p class="text-2xl font-bold text-green-600" id="completedTasks">-</p>
+                </div>
+                <div class="bg-white p-4 rounded-lg shadow">
+                    <h4 class="font-semibold mb-2">추천 정책</h4>
+                    <p class="text-2xl font-bold text-blue-600" id="recommendedPolicies">-</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// 채팅 기능
+function sendMessage() {
+    const input = document.getElementById('chatInput');
+    const message = input.value.trim();
+    if (!message) return;
+
+    addUserMessage(message);
+    input.value = '';
+
+    // OpenAI API 호출
+    fetch('/chat', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({message: message})
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            addBotMessage(data.response);
+            // 페이지 이동 제안이 있다면 처리
+            if (data.suggestion) {
+                handleSuggestion(data.suggestion);
+            }
+        } else {
+            addBotMessage("죄송합니다. 잠시 문제가 있었어요. 다시 시도해주세요.");
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        addBotMessage("연결에 문제가 있었어요. 다시 시도해주세요.");
+    });
+}
+
+function addUserMessage(message) {
+    const chatMessages = document.getElementById('chatMessages');
+    const messageDiv = document.createElement('div');
+    messageDiv.className = 'message user-message mb-3 flex justify-end';
+    messageDiv.innerHTML = `
+        <div class="bg-orange-500 text-white p-3 rounded-lg shadow-sm max-w-xs">
+            <p class="text-sm">${message}</p>
+        </div>
+        <div class="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center text-gray-600 text-sm font-bold ml-3">
+            나
+        </div>
+    `;
+    chatMessages.appendChild(messageDiv);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+}
+
+function addBotMessage(message) {
+    const chatMessages = document.getElementById('chatMessages');
+    const messageDiv = document.createElement('div');
+    messageDiv.className = 'message bot-message mb-3';
+    messageDiv.innerHTML = `
+        <div class="flex items-start">
+            <div class="w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center text-white text-sm font-bold mr-3">
+                AI
+            </div>
+            <div class="bg-white p-3 rounded-lg shadow-sm max-w-xs">
+                <p class="text-sm">${message}</p>
+            </div>
+        </div>
+    `;
+    chatMessages.appendChild(messageDiv);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+}
+
+function quickMessage(message) {
+    document.getElementById('chatInput').value = message;
+    sendMessage();
+}
+
+function handleKeyPress(event) {
+    if (event.key === 'Enter') {
+        sendMessage();
+    }
+}
+
+function clearChat() {
+    const chatMessages = document.getElementById('chatMessages');
+    chatMessages.innerHTML = `
+        <div class="message bot-message mb-3">
+            <div class="flex items-start">
+                <div class="w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center text-white text-sm font-bold mr-3">
+                    AI
+                </div>
+                <div class="bg-white p-3 rounded-lg shadow-sm max-w-xs">
+                    <p class="text-sm">안녕하세요! 무엇을 도와드릴까요? 로드맵 설계나 지원정책 찾기를 도와드릴 수 있어요! 😊</p>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+function handleSuggestion(suggestion) {
+    if (suggestion.type === 'redirect') {
+        setTimeout(() => {
+            if (confirm(`${suggestion.message}\n\n페이지로 이동하시겠습니까?`)) {
+                location.href = suggestion.url;
+            }
+        }, 1000);
+    }
+}
+
+// 페이지 로드시 통계 업데이트
+document.addEventListener('DOMContentLoaded', function() {
+    updateDashboardStats();
+});
+
+function updateDashboardStats() {
+    fetch('/dashboard-stats')
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            document.getElementById('activeTasks').textContent = data.active_tasks || 0;
+            document.getElementById('completedTasks').textContent = data.completed_tasks || 0;
+            document.getElementById('recommendedPolicies').textContent = data.recommended_policies || 0;
+        }
+    })
+    .catch(error => console.error('Stats error:', error));
+}
+</script>
+{% endblock %}

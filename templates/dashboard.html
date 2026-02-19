@@ -1,0 +1,582 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="min-h-screen bg-gradient-to-br from-blue-50 via-white to-orange-50">
+    <!-- 알림 배너 -->
+    <div id="notificationBanner" class="hidden fixed top-20 left-1/2 transform -translate-x-1/2 z-50 max-w-md w-full mx-4">
+        <div class="bg-white border-l-4 border-red-500 shadow-lg rounded-lg p-4 animate-fadeInDown">
+            <div class="flex items-center">
+                <div class="flex-shrink-0">
+                    <span class="text-red-500 text-xl">⚠️</span>
+                </div>
+                <div class="ml-3 flex-1">
+                    <p class="text-sm font-medium text-red-800" id="notificationText"></p>
+                </div>
+                <div class="ml-4 flex-shrink-0">
+                    <button onclick="closeNotification()" class="text-red-400 hover:text-red-600 focus:outline-none">
+                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 헤더 인사말 -->
+    <div class="container mx-auto px-4 py-8">
+        <div class="text-center mb-12">
+            <div class="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full mb-6 shadow-lg">
+                <span class="text-2xl">👋</span>
+            </div>
+            <h1 class="text-4xl md:text-5xl font-bold text-gradient mb-4">
+                {{ current_user.name }}님, 안녕하세요!
+            </h1>
+            <p class="text-xl text-gray-600" id="motivationalMessage">오늘도 자립을 향한 한 걸음을 내딛어보세요!</p>
+        </div>
+
+        <!-- 통계 카드 (개선된 버전) -->
+        <div class="max-w-7xl mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+            <div class="stat-card group">
+                <div class="stat-icon bg-gradient-to-br from-blue-100 to-blue-200 text-blue-600 group-hover:scale-110 transition-transform">
+                    <span class="text-2xl">📝</span>
+                </div>
+                <div class="stat-number text-blue-600" id="activeTasks">-</div>
+                <div class="stat-label">진행중인 할 일</div>
+                <div class="mt-2">
+                    <span id="dueTodayBadge" class="hidden badge badge-warning">
+                        오늘 마감: <span id="dueTodayCount">0</span>개
+                    </span>
+                </div>
+            </div>
+            
+            <div class="stat-card group">
+                <div class="stat-icon bg-gradient-to-br from-green-100 to-green-200 text-green-600 group-hover:scale-110 transition-transform">
+                    <span class="text-2xl">✅</span>
+                </div>
+                <div class="stat-number text-green-600" id="completedTasks">-</div>
+                <div class="stat-label">완료한 할 일</div>
+                <div class="text-xs text-gray-400 mt-1">이번 달 완료</div>
+            </div>
+            
+            <div class="stat-card group">
+                <div class="stat-icon bg-gradient-to-br from-orange-100 to-orange-200 text-orange-600 group-hover:scale-110 transition-transform">
+                    <span class="text-2xl">🎯</span>
+                </div>
+                <div class="stat-number text-orange-600" id="recommendedPolicies">-</div>
+                <div class="stat-label">추천 정책</div>
+                <div class="text-xs text-gray-400 mt-1">맞춤 추천</div>
+            </div>
+            
+            <div class="stat-card group">
+                <div class="stat-icon bg-gradient-to-br from-purple-100 to-purple-200 text-purple-600 group-hover:scale-110 transition-transform">
+                    <span class="text-2xl">📊</span>
+                </div>
+                <div class="stat-number text-purple-600" id="completionRate">-</div>
+                <div class="stat-label">달성률</div>
+                <div class="text-xs text-gray-400 mt-1">이번 달 평균</div>
+            </div>
+        </div>
+
+        <!-- 중앙 대화창 -->
+        <div class="max-w-5xl mx-auto mb-12">
+            <div class="chat-container" id="chatContainer">
+                <!-- 대화 헤더 -->
+                <div class="chat-header">
+                    <div class="flex items-center justify-between w-full">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-10 h-10 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
+                                <span class="text-lg">🤖</span>
+                            </div>
+                            <div>
+                                <h3 class="text-lg font-semibold">이루다 AI 상담사</h3>
+                                <span class="text-sm opacity-90">온라인</span>
+                            </div>
+                        </div>
+                        <div class="flex space-x-2">
+                            <button onclick="loadChatHistory()" class="text-white hover:text-gray-200 text-sm px-3 py-1 rounded-lg hover:bg-white hover:bg-opacity-10 transition-colors">
+                                📋 이전 대화
+                            </button>
+                            <button onclick="clearChat()" class="text-white hover:text-gray-200 text-sm px-3 py-1 rounded-lg hover:bg-white hover:bg-opacity-10 transition-colors">
+                                🗑️ 초기화
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 대화 영역 -->
+                <div id="chatMessages" class="chat-messages">
+                    <div class="chat-message bot">
+                        <div class="message-avatar bg-gradient-to-br from-orange-400 to-orange-600 text-white">
+                            AI
+                        </div>
+                        <div class="message-content bot">
+                            <p id="welcomeMessage">안녕하세요! 무엇을 도와드릴까요? 로드맵 설계나 지원정책 찾기를 도와드릴 수 있어요!</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 입력 영역 -->
+                <div class="chat-input">
+                    <div class="flex space-x-3">
+                        <input 
+                            type="text" 
+                            id="chatInput" 
+                            placeholder="궁금한 것을 물어보세요..."
+                            class="flex-1 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all"
+                            onkeypress="handleKeyPress(event)"
+                        >
+                        <button 
+                            onclick="sendMessage()" 
+                            class="btn-primary flex items-center px-6 py-3"
+                            id="sendBtn"
+                        >
+                            <span id="sendBtnText">전송</span>
+                            <span id="sendBtnSpinner" class="hidden ml-2 spinner"></span>
+                        </button>
+                    </div>
+
+                    <!-- 빠른 버튼들 -->
+                    <div class="flex flex-wrap gap-2 mt-4" id="quickButtons">
+                        <button onclick="quickMessage('로드맵을 만들고 싶어요')" 
+                                class="px-4 py-2 bg-blue-100 text-blue-800 rounded-full text-sm hover:bg-blue-200 transition-colors font-medium">
+                            🗺️ 로드맵 만들기
+                        </button>
+                        <button onclick="quickMessage('지원정책을 찾고 있어요')" 
+                                class="px-4 py-2 bg-green-100 text-green-800 rounded-full text-sm hover:bg-green-200 transition-colors font-medium">
+                            💰 지원정책 찾기
+                        </button>
+                        <button onclick="quickMessage('오늘 할 일을 알고 싶어요')" 
+                                class="px-4 py-2 bg-purple-100 text-purple-800 rounded-full text-sm hover:bg-purple-200 transition-colors font-medium">
+                            ✅ 할 일 확인
+                        </button>
+                        <button onclick="quickMessage('연체된 할 일을 재계획하고 싶어요')" 
+                                class="px-4 py-2 bg-red-100 text-red-800 rounded-full text-sm hover:bg-red-200 transition-colors font-medium">
+                            🔄 연체 재계획
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 메인 액션 카드들 -->
+        <div class="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
+            <!-- 미래설계 로드맵 -->
+            <div class="card card-interactive group" onclick="location.href='/roadmap'">
+                <div class="text-center">
+                    <div class="w-20 h-20 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform shadow-lg">
+                        <span class="text-3xl text-white">🗺️</span>
+                    </div>
+                    <h3 class="text-2xl font-bold text-gray-800 mb-3">미래설계 로드맵</h3>
+                    <p class="text-gray-600 mb-6 leading-relaxed">AI가 분석한 맞춤형 자립 계획을 확인하고 관리하세요</p>
+                    <div class="btn-secondary">
+                        로드맵 보기 →
+                    </div>
+                </div>
+            </div>
+
+            <!-- 지원정책 바로찾기 -->
+            <div class="card card-interactive group" onclick="location.href='/policies'">
+                <div class="text-center">
+                    <div class="w-20 h-20 bg-gradient-to-br from-orange-500 to-orange-600 rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform shadow-lg">
+                        <span class="text-3xl text-white">💰</span>
+                    </div>
+                    <h3 class="text-2xl font-bold text-gray-800 mb-3">지원정책 바로찾기</h3>
+                    <p class="text-gray-600 mb-6 leading-relaxed">나에게 맞는 정부 지원정책을 쉽게 찾아보세요</p>
+                    <div class="btn-primary">
+                        정책 찾기 →
+                    </div>
+                </div>
+            </div>
+
+            <!-- 할 일 관리 -->
+            <div class="card card-interactive group" onclick="location.href='/todos'">
+                <div class="text-center">
+                    <div class="w-20 h-20 bg-gradient-to-br from-green-500 to-green-600 rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform shadow-lg">
+                        <span class="text-3xl text-white">✅</span>
+                    </div>
+                    <h3 class="text-2xl font-bold text-gray-800 mb-3">할 일 관리</h3>
+                    <p class="text-gray-600 mb-6 leading-relaxed">체계적인 할 일 관리로 목표를 차근차근 달성하세요</p>
+                    <div class="btn-outline" style="border-color: #10b981; color: #10b981;">
+                        할 일 보기 →
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 최근 활동 및 진행상황 -->
+        <div class="max-w-7xl mx-auto">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <!-- 최근 활동 -->
+                <div class="card">
+                    <div class="flex items-center mb-6">
+                        <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center mr-3">
+                            <span class="text-white text-lg">📊</span>
+                        </div>
+                        <h3 class="text-xl font-bold text-gray-800">최근 활동</h3>
+                    </div>
+                    <div id="recentActivity" class="space-y-4">
+                        <div class="flex items-center space-x-4 p-3 rounded-lg hover:bg-gray-50 transition-colors">
+                            <div class="w-10 h-10 bg-gradient-to-br from-blue-100 to-blue-200 rounded-lg flex items-center justify-center flex-shrink-0">
+                                <span class="text-blue-600">📝</span>
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <p class="text-sm font-medium text-gray-800">할 일 3개 완료</p>
+                                <p class="text-xs text-gray-500">2시간 전</p>
+                            </div>
+                            <div class="badge badge-success">완료</div>
+                        </div>
+                        <div class="flex items-center space-x-4 p-3 rounded-lg hover:bg-gray-50 transition-colors">
+                            <div class="w-10 h-10 bg-gradient-to-br from-green-100 to-green-200 rounded-lg flex items-center justify-center flex-shrink-0">
+                                <span class="text-green-600">🗺️</span>
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <p class="text-sm font-medium text-gray-800">로드맵 업데이트</p>
+                                <p class="text-xs text-gray-500">어제</p>
+                            </div>
+                            <div class="badge badge-info">업데이트</div>
+                        </div>
+                        <div class="flex items-center space-x-4 p-3 rounded-lg hover:bg-gray-50 transition-colors">
+                            <div class="w-10 h-10 bg-gradient-to-br from-orange-100 to-orange-200 rounded-lg flex items-center justify-center flex-shrink-0">
+                                <span class="text-orange-600">💰</span>
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <p class="text-sm font-medium text-gray-800">지원정책 3개 찾음</p>
+                                <p class="text-xs text-gray-500">3일 전</p>
+                            </div>
+                            <div class="badge badge-warning">발견</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 진행 현황 -->
+                <div class="card">
+                    <div class="flex items-center mb-6">
+                        <div class="w-10 h-10 bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg flex items-center justify-center mr-3">
+                            <span class="text-white text-lg">📈</span>
+                        </div>
+                        <h3 class="text-xl font-bold text-gray-800">이번 달 진행 현황</h3>
+                    </div>
+                    <div class="space-y-6">
+                        <!-- 완료율 차트 -->
+                        <div>
+                            <div class="flex justify-between items-center mb-3">
+                                <span class="text-sm font-medium text-gray-700">할 일 완료율</span>
+                                <span class="text-sm font-bold text-purple-600" id="progressPercentage">0%</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" id="progressBar" style="width: 0%"></div>
+                            </div>
+                        </div>
+                        
+                        <!-- 카테고리별 진행 -->
+                        <div class="space-y-4">
+                            <div class="flex justify-between items-center">
+                                <span class="text-sm font-medium text-gray-700">주거 관련</span>
+                                <div class="flex items-center space-x-3">
+                                    <div class="w-20 bg-gray-200 rounded-full h-2">
+                                        <div class="bg-gradient-to-r from-blue-500 to-blue-600 h-2 rounded-full transition-all duration-500" style="width: 75%"></div>
+                                    </div>
+                                    <span class="text-xs font-medium text-gray-600 w-8">3/4</span>
+                                </div>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="text-sm font-medium text-gray-700">취업 준비</span>
+                                <div class="flex items-center space-x-3">
+                                    <div class="w-20 bg-gray-200 rounded-full h-2">
+                                        <div class="bg-gradient-to-r from-green-500 to-green-600 h-2 rounded-full transition-all duration-500" style="width: 50%"></div>
+                                    </div>
+                                    <span class="text-xs font-medium text-gray-600 w-8">2/4</span>
+                                </div>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="text-sm font-medium text-gray-700">경제 관리</span>
+                                <div class="flex items-center space-x-3">
+                                    <div class="w-20 bg-gray-200 rounded-full h-2">
+                                        <div class="bg-gradient-to-r from-orange-500 to-orange-600 h-2 rounded-full transition-all duration-500" style="width: 25%"></div>
+                                    </div>
+                                    <span class="text-xs font-medium text-gray-600 w-8">1/4</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// 전역 변수
+let conversationHistory = [];
+
+// 채팅 기능 (개선된 버전)
+function sendMessage() {
+    const input = document.getElementById('chatInput');
+    const message = input.value.trim();
+    if (!message) return;
+
+    // 전송 버튼 로딩 상태
+    const sendBtn = document.getElementById('sendBtn');
+    const sendBtnText = document.getElementById('sendBtnText');
+    const sendBtnSpinner = document.getElementById('sendBtnSpinner');
+    
+    sendBtn.disabled = true;
+    sendBtnText.textContent = '전송 중...';
+    sendBtnSpinner.classList.remove('hidden');
+
+    addUserMessage(message);
+    input.value = '';
+
+    // 대화 히스토리에 추가
+    conversationHistory.push({role: "user", content: message});
+
+    // OpenAI API 호출 (대화 히스토리 포함)
+    fetch('/chat', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            message: message,
+            history: conversationHistory
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            addBotMessage(data.response);
+            conversationHistory.push({role: "assistant", content: data.response});
+            
+            // 대화 히스토리 저장
+            saveChatHistory(message, data.response);
+            
+            // 페이지 이동 제안이 있다면 처리
+            if (data.suggestion) {
+                handleSuggestion(data.suggestion);
+            }
+        } else {
+            addBotMessage("죄송합니다. 잠시 문제가 있었어요. 다시 시도해주세요.");
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        addBotMessage("연결에 문제가 있었어요. 다시 시도해주세요.");
+    })
+    .finally(() => {
+        // 전송 버튼 원래 상태로
+        sendBtn.disabled = false;
+        sendBtnText.textContent = '전송';
+        sendBtnSpinner.classList.add('hidden');
+    });
+}
+
+function addUserMessage(message) {
+    const chatMessages = document.getElementById('chatMessages');
+    const messageDiv = document.createElement('div');
+    messageDiv.className = 'chat-message user animate-fadeInUp';
+    messageDiv.innerHTML = `
+        <div class="message-content user">
+            <p>${escapeHtml(message)}</p>
+        </div>
+        <div class="message-avatar bg-gradient-to-br from-gray-400 to-gray-500 text-white">
+            나
+        </div>
+    `;
+    chatMessages.appendChild(messageDiv);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+}
+
+function addBotMessage(message) {
+    const chatMessages = document.getElementById('chatMessages');
+    const messageDiv = document.createElement('div');
+    messageDiv.className = 'chat-message bot animate-fadeInUp';
+    messageDiv.innerHTML = `
+        <div class="message-avatar bg-gradient-to-br from-orange-400 to-orange-600 text-white">
+            AI
+        </div>
+        <div class="message-content bot">
+            <p>${escapeHtml(message)}</p>
+        </div>
+    `;
+    chatMessages.appendChild(messageDiv);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+}
+
+function quickMessage(message) {
+    document.getElementById('chatInput').value = message;
+    sendMessage();
+}
+
+function handleKeyPress(event) {
+    if (event.key === 'Enter') {
+        sendMessage();
+    }
+}
+
+function clearChat() {
+    const chatMessages = document.getElementById('chatMessages');
+    chatMessages.innerHTML = `
+        <div class="chat-message bot">
+            <div class="message-avatar bg-gradient-to-br from-orange-400 to-orange-600 text-white">
+                AI
+            </div>
+            <div class="message-content bot">
+                <p>안녕하세요! 무엇을 도와드릴까요? 로드맵 설계나 지원정책 찾기를 도와드릴 수 있어요!</p>
+            </div>
+        </div>
+    `;
+    conversationHistory = [];
+}
+
+function handleSuggestion(suggestion) {
+    if (suggestion.type === 'redirect') {
+        setTimeout(() => {
+            if (confirm(`${suggestion.message}\n\n페이지로 이동하시겠습니까?`)) {
+                location.href = suggestion.url;
+            }
+        }, 1000);
+    }
+}
+
+// 대화 히스토리 저장
+function saveChatHistory(userMessage, aiResponse) {
+    fetch('/chat/save-history', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            user_message: userMessage,
+            ai_response: aiResponse
+        })
+    })
+    .catch(error => console.error('History save error:', error));
+}
+
+// 대화 히스토리 불러오기
+function loadChatHistory() {
+    fetch('/chat/history')
+    .then(response => response.json())
+    .then(data => {
+        if (data.success && data.history.length > 0) {
+            showChatHistoryModal(data.history);
+        } else {
+            alert('이전 대화 기록이 없습니다.');
+        }
+    })
+    .catch(error => console.error('History load error:', error));
+}
+
+// HTML 이스케이프 함수
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+// 페이지 로드시 초기화
+document.addEventListener('DOMContentLoaded', function() {
+    updateDashboardStats();
+    checkNotifications();
+    setMotivationalMessage();
+    loadRecentActivity();
+});
+
+// 대시보드 통계 업데이트 (개선된 버전)
+function updateDashboardStats() {
+    fetch('/dashboard-stats')
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            document.getElementById('activeTasks').textContent = data.active_tasks || 0;
+            document.getElementById('completedTasks').textContent = data.completed_tasks || 0;
+            document.getElementById('recommendedPolicies').textContent = data.recommended_policies || 0;
+            
+            // 오늘 마감 할일 배지 표시
+            if (data.due_today > 0) {
+                document.getElementById('dueTodayBadge').classList.remove('hidden');
+                document.getElementById('dueTodayCount').textContent = data.due_today;
+            }
+            
+            // 완료율 계산 및 표시
+            const total = data.active_tasks + data.completed_tasks;
+            const completionRate = total > 0 ? Math.round((data.completed_tasks / total) * 100) : 0;
+            document.getElementById('completionRate').textContent = completionRate + '%';
+            
+            // 진행률 바 업데이트
+            document.getElementById('progressPercentage').textContent = completionRate + '%';
+            document.getElementById('progressBar').style.width = completionRate + '%';
+            
+            // 연체된 할일이 있으면 알림 표시
+            if (data.overdue_tasks > 0) {
+                showNotification(`연체된 할 일이 ${data.overdue_tasks}개 있습니다. 확인해보세요!`, 'warning');
+            }
+        }
+    })
+    .catch(error => console.error('Stats error:', error));
+}
+
+// 알림 확인 및 표시
+function checkNotifications() {
+    fetch('/notifications')
+    .then(response => response.json())
+    .then(data => {
+        if (data.success && data.counts.overdue > 0) {
+            showNotification(`연체된 할 일이 ${data.counts.overdue}개 있습니다!`, 'error');
+        }
+    })
+    .catch(error => console.error('Notification error:', error));
+}
+
+// 알림 배너 표시
+function showNotification(message, type = 'info') {
+    const banner = document.getElementById('notificationBanner');
+    const text = document.getElementById('notificationText');
+    const bannerContent = banner.querySelector('.bg-white');
+    
+    text.textContent = message;
+    
+    // 타입에 따른 스타일 변경
+    if (type === 'error') {
+        bannerContent.className = 'bg-white border-l-4 border-red-500 shadow-lg rounded-lg p-4 animate-fadeInDown';
+    } else if (type === 'warning') {
+        bannerContent.className = 'bg-white border-l-4 border-yellow-500 shadow-lg rounded-lg p-4 animate-fadeInDown';
+    } else {
+        bannerContent.className = 'bg-white border-l-4 border-blue-500 shadow-lg rounded-lg p-4 animate-fadeInDown';
+    }
+    
+    banner.classList.remove('hidden');
+    
+    // 5초 후 자동 숨김
+    setTimeout(() => {
+        closeNotification();
+    }, 5000);
+}
+
+// 알림 닫기
+function closeNotification() {
+    document.getElementById('notificationBanner').classList.add('hidden');
+}
+
+// 동기부여 메시지 설정
+function setMotivationalMessage() {
+    const messages = [
+        "오늘도 자립을 향한 한 걸음을 내딛어보세요!",
+        "작은 실천이 큰 변화를 만들어냅니다!",
+        "당신의 꿈을 응원합니다!",
+        "한 번에 하나씩, 천천히 해나가면 됩니다!",
+        "이루다가 항상 곁에서 도와드릴게요!"
+    ];
+    
+    const randomMessage = messages[Math.floor(Math.random() * messages.length)];
+    document.getElementById('motivationalMessage').textContent = randomMessage;
+}
+
+// 최근 활동 로드 (실제 데이터로 대체 예정)
+function loadRecentActivity() {
+    // 실제 구현에서는 서버에서 데이터를 가져와야 함
+    console.log('Recent activity loaded');
+}
+</script>
+{% endblock %}
